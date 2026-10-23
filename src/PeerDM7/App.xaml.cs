@@ -13,8 +13,12 @@ public partial class App : Application
     MainViewModel? _vm;
     MainWindow? _list;
     WinForms.NotifyIcon? _tray;
-    bool _quiet;
     bool _trayHintShown;
+
+    /// <summary>Kept for this session only, like everything else.</summary>
+    public bool SoundsOn { get; set; } = true;
+    public bool ToastsOn { get; set; } = true;
+    public bool IsDark { get; private set; }
     readonly Dictionary<string, ChatWindow> _chats = new();
 
     protected override void OnStartup(StartupEventArgs e)
@@ -33,16 +37,13 @@ public partial class App : Application
             switch (e.Args[i])
             {
                 case "--name" when i + 1 < e.Args.Length: presetName = e.Args[++i]; break;
-                case "--quiet": _quiet = true; break;
+                case "--quiet": SoundsOn = false; break;
+                case "--dark": IsDark = true; break;
                 case "--log" when i + 1 < e.Args.Length: Log.FilePath = e.Args[++i]; break;
             }
         }
 
-        ApplyTheme();
-        SystemEvents.UserPreferenceChanged += (_, a) =>
-        {
-            if (a.Category == UserPreferenceCategory.General) Dispatcher.BeginInvoke(ApplyTheme);
-        };
+        SetTheme(IsDark);
 
         var name = presetName?.Trim();
         if (string.IsNullOrEmpty(name))
@@ -78,17 +79,14 @@ public partial class App : Application
         CreateTray();
     }
 
-    void ApplyTheme()
+    /// <summary>White is the default, the classic look. Dark is one click away in Tools.</summary>
+    public void SetTheme(bool dark)
     {
-        var dark = false;
-        try
+        IsDark = dark;
+        Resources.MergedDictionaries[0] = new ResourceDictionary
         {
-            using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
-            dark = key?.GetValue("AppsUseLightTheme") is int v && v == 0;
-        }
-        catch { }
-        var dict = new ResourceDictionary { Source = new Uri(dark ? "Themes/Dark.xaml" : "Themes/Light.xaml", UriKind.Relative) };
-        Resources.MergedDictionaries[0] = dict;
+            Source = new Uri(dark ? "Themes/Dark.xaml" : "Themes/Light.xaml", UriKind.Relative),
+        };
     }
 
     // ---- chats ----
@@ -122,6 +120,7 @@ public partial class App : Application
     void Notify(ConversationViewModel conv, string text)
     {
         PlaySound();
+        if (!ToastsOn) return;
         var oneLine = text.Replace('\n', ' ').Replace('\r', ' ');
         if (oneLine.Length > 140) oneLine = oneLine[..140] + "...";
         new ToastWindow(conv, oneLine, () => OpenChat(conv, true)).ShowToast();
@@ -129,7 +128,7 @@ public partial class App : Application
 
     void PlaySound()
     {
-        if (_quiet) return;
+        if (!SoundsOn) return;
         try
         {
             var wav = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "Media", "Windows Notify Messaging.wav");
@@ -176,7 +175,7 @@ public partial class App : Application
             "You stay online in the tray. Right-click the icon to sign out and quit.", WinForms.ToolTipIcon.None);
     }
 
-    void Quit()
+    public void Quit()
     {
         foreach (var w in _chats.Values.ToList()) w.Close();
         if (_tray is not null) _tray.Visible = false;

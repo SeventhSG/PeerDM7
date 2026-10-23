@@ -3,98 +3,142 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:v="clr-namespace:PeerDM7.Views"
         xmlns:c="clr-namespace:PeerDM7.Controls"
-        Title="{Binding Title}" Width="560" Height="480" MinWidth="420" MinHeight="360">
+        Title="{Binding Title}" Width="600" Height="520" MinWidth="460" MinHeight="380">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="34"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
+        <Rectangle Grid.RowSpan="4" Fill="{DynamicResource Bg.Glow}" IsHitTestVisible="False"/>
 
+        <!-- Title bar -->
         <DockPanel>
             <Button DockPanel.Dock="Right" Style="{StaticResource Button.CaptionClose}" Content="&#xE8BB;" Click="Close_Click" ToolTip="Close"/>
             <Button DockPanel.Dock="Right" Style="{StaticResource Button.Caption}" Content="&#xE922;" Click="Max_Click" ToolTip="Maximize"/>
             <Button DockPanel.Dock="Right" Style="{StaticResource Button.Caption}" Content="&#xE921;" Click="Min_Click" ToolTip="Minimize"/>
-            <StackPanel Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
-                <Image Source="/Assets/PeerDM7.png" Width="16" Height="16" Margin="0,0,8,0"/>
+            <StackPanel Orientation="Horizontal" Margin="10,0,0,0" VerticalAlignment="Center">
+                <Image Source="/Assets/PeerDM7.png" Width="16" Height="16" Margin="0,0,7,0"/>
                 <TextBlock FontSize="12" Foreground="{DynamicResource Text.Secondary}" TextTrimming="CharacterEllipsis">
-                    <Run Text="{Binding Title, Mode=OneWay}"/><Run Text=" - Conversation"/>
+                    <Run Text="{Binding Title, Mode=OneWay}" FontWeight="SemiBold" Foreground="{DynamicResource Text.Heading}"/><Run Text=" - Conversation"/>
                 </TextBlock>
             </StackPanel>
         </DockPanel>
 
-        <Border Grid.Row="1" Margin="8,0,8,8" Background="{DynamicResource Bg.Surface}" BorderBrush="{DynamicResource Border.Default}" BorderThickness="1" CornerRadius="8">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition x:Name="SideColumn" Width="136"/>
-                </Grid.ColumnDefinitions>
+        <!-- Who -->
+        <StackPanel Grid.Row="1" Margin="14,2,14,6">
+            <TextBlock FontSize="12.5" Foreground="{DynamicResource Text.Secondary}" TextTrimming="CharacterEllipsis">
+                <Run Text="To:"/>
+                <Run Text="{Binding Title, Mode=OneWay}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource Text.Primary}"/>
+                <Run x:Name="StatusRun" Text="{Binding StatusLabel, Mode=OneWay, StringFormat=' ({0})'}"/>
+            </TextBlock>
+            <TextBlock c:EmoticonText.Text="{Binding Subtitle}" c:EmoticonText.Size="15" FontSize="12" FontStyle="Italic" Foreground="{DynamicResource Text.Tertiary}" TextTrimming="CharacterEllipsis"
+                       Visibility="{Binding Subtitle, Converter={StaticResource EmptyToCollapsed}}"/>
+        </StackPanel>
 
-                <!-- Header -->
-                <Border Grid.ColumnSpan="2" Background="{DynamicResource Header.Band}" CornerRadius="8,8,0,0" Padding="14,10,10,8">
-                    <StackPanel>
-                        <DockPanel>
-                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                                <Button x:Name="NudgeButton" AutomationProperties.Name="Nudge" Style="{StaticResource Button.Subtle}" Command="{Binding NudgeCommand}" ToolTip="Shake their chat window">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE877;" Style="{StaticResource Text.Icon}" Margin="0,0,6,0" Foreground="{DynamicResource Accent.Text}"/>
-                                        <TextBlock Text="Nudge"/>
-                                    </StackPanel>
-                                </Button>
-                                <Button x:Name="AddButton" AutomationProperties.Name="Add people" Style="{StaticResource Button.Subtle}" Click="AddPeople_Click" ToolTip="Add people to this group">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE8FA;" Style="{StaticResource Text.Icon}" Margin="0,0,6,0" Foreground="{DynamicResource Accent.Text}"/>
-                                        <TextBlock Text="Add people"/>
-                                    </StackPanel>
-                                </Button>
-                                <Button x:Name="LeaveButton" AutomationProperties.Name="Leave group" Style="{StaticResource Button.Subtle}" Command="{Binding LeaveCommand}" ToolTip="Leave this group">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE89B;" Style="{StaticResource Text.Icon}" Margin="0,0,6,0" Foreground="{DynamicResource Text.Secondary}"/>
-                                        <TextBlock Text="Leave"/>
-                                    </StackPanel>
-                                </Button>
-                            </StackPanel>
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock FontSize="12" Foreground="{DynamicResource Text.Secondary}">
-                                    <Run Text="To:"/>
-                                    <Run Text="{Binding Title, Mode=OneWay}" FontFamily="{StaticResource Font.Display}" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource Text.Primary}"/>
-                                    <Run x:Name="StatusRun" Text="{Binding StatusLabel, Mode=OneWay, StringFormat=' ({0})'}"/>
-                                </TextBlock>
-                                <TextBlock Text="{Binding Subtitle}" FontSize="12" FontStyle="Italic" Foreground="{DynamicResource Text.Tertiary}" TextTrimming="CharacterEllipsis"
-                                           Visibility="{Binding Subtitle, Converter={StaticResource EmptyToCollapsed}}"/>
-                            </StackPanel>
-                        </DockPanel>
-                        <Rectangle Height="2" Fill="{DynamicResource Accent.Rule}" Margin="0,8,0,0" RadiusX="1" RadiusY="1"/>
+        <!-- Toolbar -->
+        <Border Grid.Row="2" Background="{DynamicResource Band}" BorderBrush="{DynamicResource Border.Soft}" BorderThickness="0,1" Padding="8,3">
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="FileButton" Style="{StaticResource Button.Subtle}" Command="{Binding SendFileCommand}" ToolTip="Send a file or photo" AutomationProperties.Name="Send a file">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE8A5;" Style="{StaticResource Text.Icon}" FontSize="15" Margin="0,0,6,0" Foreground="{DynamicResource Accent.Text}"/>
+                        <TextBlock Text="Send a file"/>
                     </StackPanel>
-                </Border>
+                </Button>
+                <Button x:Name="NudgeButton" Style="{StaticResource Button.Subtle}" Command="{Binding NudgeCommand}" ToolTip="Shake their chat window" AutomationProperties.Name="Nudge">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE877;" Style="{StaticResource Text.Icon}" FontSize="15" Margin="0,0,6,0" Foreground="{DynamicResource Accent.Text}"/>
+                        <TextBlock Text="Nudge"/>
+                    </StackPanel>
+                </Button>
+                <Button x:Name="AddButton" Style="{StaticResource Button.Subtle}" Click="AddPeople_Click" ToolTip="Add people to this group" AutomationProperties.Name="Add people">
+                    <StackPanel Orientation="Horizontal">
+                        <c:BuddyView Width="16" Height="16" Color="#3FAE2A" Margin="0,0,6,0"/>
+                        <TextBlock Text="Invite"/>
+                    </StackPanel>
+                </Button>
+                <Button x:Name="LeaveButton" Style="{StaticResource Button.Subtle}" Command="{Binding LeaveCommand}" ToolTip="Leave this group" AutomationProperties.Name="Leave group">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE89B;" Style="{StaticResource Text.Icon}" FontSize="14" Margin="0,0,6,0" Foreground="{DynamicResource Text.Secondary}"/>
+                        <TextBlock Text="Leave"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Border>
 
-                <!-- Transcript -->
-                <Grid Grid.Row="1">
-                    <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto" Padding="14,8,8,8">
+        <Grid Grid.Row="3" Margin="10,8,10,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition x:Name="SideColumn" Width="128"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Transcript -->
+            <Border Style="{StaticResource Panel}">
+                <Grid>
+                    <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto" Padding="12,6,8,8">
                         <ItemsControl ItemsSource="{Binding Messages}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel>
-                                        <!-- Normal message -->
-                                        <StackPanel Visibility="{Binding IsNudge, Converter={StaticResource BoolToVisInv}}">
+                                        <!-- Text -->
+                                        <StackPanel Visibility="{Binding IsText, Converter={StaticResource BoolToVis}}">
                                             <DockPanel Margin="0,8,0,1" Visibility="{Binding ShowHeader, Converter={StaticResource BoolToVis}}">
                                                 <TextBlock DockPanel.Dock="Right" Text="{Binding Time}" FontSize="11" Foreground="{DynamicResource Text.Tertiary}" VerticalAlignment="Bottom"/>
-                                                <TextBlock Text="{Binding Header}" FontSize="12" Foreground="{DynamicResource Text.Secondary}"/>
+                                                <TextBlock Text="{Binding Header}" FontSize="12" Foreground="{DynamicResource Text.Tertiary}"/>
                                             </DockPanel>
-                                            <TextBox Style="{StaticResource TextBox.Message}" Text="{Binding Text, Mode=OneWay}" Margin="10,0,0,0"/>
+                                            <TextBlock c:EmoticonText.Text="{Binding Text}" TextWrapping="Wrap" FontSize="13.5" Margin="10,0,0,1" Foreground="{DynamicResource Text.Primary}" Background="Transparent">
+                                                <TextBlock.ContextMenu>
+                                                    <ContextMenu>
+                                                        <MenuItem Header="Copy message" Click="CopyMessage_Click"/>
+                                                    </ContextMenu>
+                                                </TextBlock.ContextMenu>
+                                            </TextBlock>
                                             <TextBlock Text="{Binding StateText}" FontSize="11.5" FontStyle="Italic" Foreground="{DynamicResource Text.Tertiary}" Margin="10,1,0,0" TextWrapping="Wrap"
                                                        Visibility="{Binding StateText, Converter={StaticResource EmptyToCollapsed}}"/>
                                         </StackPanel>
+
                                         <!-- Nudge -->
-                                        <StackPanel Orientation="Horizontal" Margin="0,10,0,2" Visibility="{Binding IsNudge, Converter={StaticResource BoolToVis}}">
-                                            <TextBlock Text="&#xE877;" Style="{StaticResource Text.Icon}" FontSize="12" Foreground="{DynamicResource Accent.Text}" Margin="0,0,8,0"/>
-                                            <TextBlock Text="{Binding NudgeText}" FontSize="12.5" FontStyle="Italic" Foreground="{DynamicResource Text.Secondary}"/>
-                                            <TextBlock Text="{Binding Time}" FontSize="11" Foreground="{DynamicResource Text.Tertiary}" Margin="8,0,0,0" VerticalAlignment="Center"/>
-                                        </StackPanel>
+                                        <Border Margin="0,10,0,2" Padding="8,4" CornerRadius="3" Background="{DynamicResource Bg.Subtle}" HorizontalAlignment="Left"
+                                                Visibility="{Binding IsNudge, Converter={StaticResource BoolToVis}}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="&#xE877;" Style="{StaticResource Text.Icon}" FontSize="13" Foreground="{DynamicResource Accent.Text}" Margin="0,0,8,0"/>
+                                                <TextBlock Text="{Binding NudgeText}" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource Text.Secondary}"/>
+                                                <TextBlock Text="{Binding Time}" FontSize="11" Foreground="{DynamicResource Text.Tertiary}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- File -->
+                                        <Border Margin="0,10,0,2" Padding="10,8" CornerRadius="4" BorderThickness="1" BorderBrush="{DynamicResource Border.Soft}" Background="{DynamicResource Bg.Subtle}"
+                                                MinWidth="240" MaxWidth="360" HorizontalAlignment="Left" Visibility="{Binding IsFile, Converter={StaticResource BoolToVis}}">
+                                            <StackPanel DataContext="{Binding Transfer}">
+                                                <DockPanel>
+                                                    <TextBlock DockPanel.Dock="Left" Text="&#xE8A5;" Style="{StaticResource Text.Icon}" FontSize="22" Foreground="{DynamicResource Accent.Text}" Margin="0,0,10,0" VerticalAlignment="Top"/>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Text="{Binding SizeText}" FontSize="11.5" Foreground="{DynamicResource Text.Tertiary}"/>
+                                                    </StackPanel>
+                                                </DockPanel>
+                                                <ProgressBar Style="{StaticResource Progress}" Maximum="1" Value="{Binding Progress, Mode=OneWay}" Margin="0,8,0,0"
+                                                             Visibility="{Binding IsActive, Converter={StaticResource BoolToVis}}"/>
+                                                <TextBlock Text="{Binding StatusText}" FontSize="12" Foreground="{DynamicResource Text.Secondary}" Margin="0,6,0,0" TextWrapping="Wrap"
+                                                           Visibility="{Binding StatusText, Converter={StaticResource EmptyToCollapsed}}"/>
+                                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0" Visibility="{Binding IsOffered, Converter={StaticResource BoolToVis}}">
+                                                    <Button Style="{StaticResource Button.Accent}" Content="Accept" Command="{Binding AcceptCommand}" MinHeight="26" Padding="14,2" AutomationProperties.Name="Accept file"/>
+                                                    <Button Style="{StaticResource Button.Standard}" Content="Decline" Command="{Binding DeclineCommand}" MinHeight="26" Padding="12,2" Margin="6,0,0,0"/>
+                                                </StackPanel>
+                                                <Button Style="{StaticResource Button.Standard}" Content="Cancel" Command="{Binding CancelCommand}" MinHeight="24" Padding="12,1" Margin="0,8,0,0" HorizontalAlignment="Left"
+                                                        Visibility="{Binding IsActive, Converter={StaticResource BoolToVis}}"/>
+                                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0" Visibility="{Binding IsDone, Converter={StaticResource BoolToVis}}">
+                                                    <Button Style="{StaticResource Button.Accent}" Content="Open" Command="{Binding OpenCommand}" MinHeight="26" Padding="14,2"/>
+                                                    <Button Style="{StaticResource Button.Standard}" Content="Show in folder" Command="{Binding ShowCommand}" MinHeight="26" Padding="12,2" Margin="6,0,0,0"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
                                     </StackPanel>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
@@ -103,56 +147,95 @@
                     <TextBlock x:Name="EmptyTranscript" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="24" TextAlignment="Center" TextWrapping="Wrap"
                                Foreground="{DynamicResource Text.Tertiary}" IsHitTestVisible="False"/>
                 </Grid>
+            </Border>
 
-                <!-- Side column: display picture for 1:1, member list for groups -->
-                <Border Grid.Row="1" Grid.Column="1" BorderBrush="{DynamicResource Border.Default}" BorderThickness="1,0,0,0" Padding="12,12,12,8">
-                    <Grid>
-                        <c:AvatarView x:Name="TheirPicture" Width="104" Height="104" Radius="10" RingThickness="3" VerticalAlignment="Top"
-                                      Initials="{Binding Initials}" Ring="{Binding Status, Converter={StaticResource StatusToBrush}}"/>
-                        <DockPanel x:Name="MemberPanel">
-                            <TextBlock DockPanel.Dock="Top" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource Text.Secondary}" Margin="0,0,0,6">
-                                <Run Text="In this chat"/> <Run x:Name="MemberCount"/>
-                            </TextBlock>
-                            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                <ItemsControl ItemsSource="{Binding Members}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" Margin="0,3" ToolTip="{Binding StatusLabel}">
-                                                <c:AvatarView Width="24" Height="24" Radius="4" RingThickness="1.5" Initials="{Binding Initials}" Ring="{Binding Status, Converter={StaticResource StatusToBrush}}" Margin="0,0,8,0"/>
-                                                <TextBlock Text="{Binding Title}" VerticalAlignment="Center" FontSize="12.5" TextTrimming="CharacterEllipsis" MaxWidth="78"/>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </ScrollViewer>
-                        </DockPanel>
-                        <c:AvatarView x:Name="MyPicture" Width="72" Height="72" Radius="8" RingThickness="2.5" VerticalAlignment="Bottom" HorizontalAlignment="Center"/>
-                    </Grid>
+            <!-- Compose -->
+            <StackPanel Grid.Row="1" Margin="0,6,0,0">
+                <Border Background="{DynamicResource Accent.Soft}" BorderBrush="{DynamicResource Border.Soft}" BorderThickness="1" CornerRadius="3" Padding="10,4" Margin="0,0,0,4"
+                        Visibility="{Binding OfflineNotice, Converter={StaticResource EmptyToCollapsed}}">
+                    <TextBlock Text="{Binding OfflineNotice}" FontSize="12" Foreground="{DynamicResource Text.Secondary}" TextWrapping="Wrap"/>
                 </Border>
-
-                <!-- Compose -->
-                <StackPanel Grid.Row="2" Grid.ColumnSpan="2">
-                    <Border Background="{DynamicResource Accent.Soft}" Padding="12,6" Visibility="{Binding OfflineNotice, Converter={StaticResource EmptyToCollapsed}}">
-                        <TextBlock Text="{Binding OfflineNotice}" FontSize="12" Foreground="{DynamicResource Text.Secondary}" TextWrapping="Wrap"/>
-                    </Border>
-                    <Border BorderBrush="{DynamicResource Border.Default}" BorderThickness="0,1,0,0" Padding="10,6,10,10">
-                        <StackPanel>
-                            <TextBlock Text="{Binding TypingText}" FontSize="11.5" FontStyle="Italic" Foreground="{DynamicResource Text.Tertiary}" Margin="2,0,0,6" Height="16"/>
-                            <DockPanel>
-                                <Button DockPanel.Dock="Right" Style="{StaticResource Button.Accent}" Command="{Binding SendCommand}" AutomationProperties.Name="Send" Margin="8,0,0,0" Padding="18,0" VerticalAlignment="Stretch" ToolTip="Send (Enter)">
+                <Border Background="{DynamicResource Bg.Subtle}" BorderBrush="{DynamicResource Border.Strong}" BorderThickness="1" CornerRadius="3" Padding="10,4" Margin="0,0,0,4"
+                        Visibility="{Binding Notice, Converter={StaticResource EmptyToCollapsed}}">
+                    <TextBlock Text="{Binding Notice}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource Text.Secondary}" TextWrapping="Wrap"/>
+                </Border>
+                <TextBlock Text="{Binding TypingText}" FontSize="11.5" FontStyle="Italic" Foreground="{DynamicResource Text.Tertiary}" Margin="3,0,0,3" Height="16"/>
+                <Border Style="{StaticResource Panel}">
+                    <DockPanel>
+                        <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource Border.Soft}" BorderThickness="0,0,0,1" Padding="4,2">
+                            <StackPanel Orientation="Horizontal">
+                                <Button x:Name="EmoticonButton" Style="{StaticResource Button.Subtle}" Padding="4,2" MinHeight="0" Click="Emoticons_Click" ToolTip="Emoticons" AutomationProperties.Name="Emoticons">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE724;" Style="{StaticResource Text.Icon}" FontSize="13" Margin="0,0,8,0"/>
-                                        <TextBlock Text="Send"/>
+                                        <c:EmoticonView Kind="Smile" Width="18" Height="18"/>
+                                        <TextBlock Text="&#xE70D;" Style="{StaticResource Text.Icon}" FontSize="8" Margin="4,0,0,0" Foreground="{DynamicResource Text.Secondary}"/>
                                     </StackPanel>
                                 </Button>
-                                <TextBox x:Name="Input" AutomationProperties.Name="Message" Text="{Binding Draft, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap"
-                                         MinHeight="56" MaxHeight="140" VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto"
-                                         c:Hint.Text="Type a message. Shift+Enter for a new line." PreviewKeyDown="Input_PreviewKeyDown"/>
-                            </DockPanel>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
+                                <Button x:Name="NudgeMini" Style="{StaticResource Button.Subtle}" Padding="5,2" MinHeight="0" Command="{Binding NudgeCommand}" ToolTip="Send a nudge">
+                                    <TextBlock Text="&#xE877;" Style="{StaticResource Text.Icon}" FontSize="15" Foreground="{DynamicResource Accent.Text}"/>
+                                </Button>
+                                <Button x:Name="FileMini" Style="{StaticResource Button.Subtle}" Padding="5,2" MinHeight="0" Command="{Binding SendFileCommand}" ToolTip="Send a file">
+                                    <TextBlock Text="&#xE8A5;" Style="{StaticResource Text.Icon}" FontSize="15" Foreground="{DynamicResource Accent.Text}"/>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                        <Button DockPanel.Dock="Right" Style="{StaticResource Button.Accent}" Command="{Binding SendCommand}" Margin="6" Padding="18,0" MinWidth="76" VerticalAlignment="Stretch"
+                                ToolTip="Send (Enter)" AutomationProperties.Name="Send" Content="Send"/>
+                        <TextBox x:Name="Input" AutomationProperties.Name="Message" Text="{Binding Draft, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap"
+                                 BorderThickness="0" BorderBrush="Transparent" Background="Transparent"
+                                 MinHeight="62" MaxHeight="140" VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto"
+                                 c:Hint.Text="Type a message. Codes like :) and (H) become emoticons." PreviewKeyDown="Input_PreviewKeyDown"/>
+                    </DockPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- Display pictures: theirs on top, yours at the bottom. Members for groups. -->
+            <Grid Grid.Column="1" Grid.RowSpan="2" Margin="10,0,0,0">
+                <c:AvatarView x:Name="TheirPicture" Width="112" Height="112" Radius="7" VerticalAlignment="Top"
+                              Source="{Binding Picture}" BuddyColor="{Binding BuddyColor}" Ring="{Binding Status, Converter={StaticResource StatusToBrush}}"/>
+                <Border x:Name="MemberPanel" Style="{StaticResource Panel}" VerticalAlignment="Top" MaxHeight="300" Padding="8,6">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource Text.Heading}" Margin="0,0,0,6">
+                            <Run Text="In this chat"/> <Run x:Name="MemberCount"/>
+                        </TextBlock>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding Members}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Margin="0,3" ToolTip="{Binding StatusLabel}">
+                                            <c:BuddyView Width="15" Height="15" Margin="0,0,6,0" Color="{Binding Status, Converter={StaticResource StatusToBrush}, ConverterParameter=buddy}"/>
+                                            <TextBlock Text="{Binding Title}" VerticalAlignment="Center" FontSize="12.5" TextTrimming="CharacterEllipsis" MaxWidth="80"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </DockPanel>
+                </Border>
+                <c:AvatarView x:Name="MyPicture" Width="112" Height="112" Radius="7" VerticalAlignment="Bottom"/>
             </Grid>
-        </Border>
+        </Grid>
+
+        <!-- Emoticon picker -->
+        <Popup x:Name="EmoticonPopup" PlacementTarget="{Binding ElementName=EmoticonButton}" Placement="Top" StaysOpen="False" AllowsTransparency="True" PopupAnimation="None">
+            <Border Margin="0,0,8,8" Background="{DynamicResource Bg.Flyout}" BorderBrush="{DynamicResource Border.Default}" BorderThickness="1" CornerRadius="5" Padding="6">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.2" Color="{DynamicResource Shadow.Color}"/>
+                </Border.Effect>
+                <ItemsControl x:Name="EmoticonGrid">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Columns="8"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Style="{StaticResource Button.Subtle}" Padding="4" MinHeight="0" ToolTip="{Binding Tip}" Click="Emoticon_Click" Tag="{Binding}" AutomationProperties.Name="{Binding Name}">
+                                <c:EmoticonView Kind="{Binding Kind}" Width="22" Height="22"/>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Border>
+        </Popup>
     </Grid>
 </v:ChromeWindow>

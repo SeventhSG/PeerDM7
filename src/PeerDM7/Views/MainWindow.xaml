@@ -4,18 +4,20 @@
         xmlns:v="clr-namespace:PeerDM7.Views"
         xmlns:c="clr-namespace:PeerDM7.Controls"
         xmlns:vm="clr-namespace:PeerDM7.ViewModels"
-        Title="PeerDM7" Width="320" Height="620" MinWidth="280" MinHeight="460">
+        Title="PeerDM7" Width="310" Height="640" MinWidth="270" MinHeight="460">
     <v:ChromeWindow.Resources>
+        <!-- A person: status aero guy, name, personal message, small display picture -->
         <DataTemplate DataType="{x:Type vm:ContactViewModel}">
-            <Grid Height="46" Background="Transparent">
+            <Grid Height="34" Background="Transparent" ToolTip="{Binding StatusLabel}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <c:AvatarView Width="34" Height="34" Radius="5" Margin="10,0,10,0" Initials="{Binding Initials}" Ring="{Binding Status, Converter={StaticResource StatusToBrush}}"/>
-                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis">
+                <c:BuddyView Width="17" Height="17" Margin="8,0,7,0" Color="{Binding Status, Converter={StaticResource StatusToBrush}, ConverterParameter=buddy}"/>
+                <DockPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock DockPanel.Dock="Left" Text="{Binding Title}" TextTrimming="CharacterEllipsis" MaxWidth="150">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Foreground" Value="{DynamicResource Text.Primary}"/>
@@ -27,31 +29,36 @@
                             </Style>
                         </TextBlock.Style>
                     </TextBlock>
-                    <TextBlock Text="{Binding Subtitle}" FontSize="12" FontStyle="Italic" Foreground="{DynamicResource Text.Tertiary}" TextTrimming="CharacterEllipsis"
-                               Visibility="{Binding Subtitle, Converter={StaticResource EmptyToCollapsed}}"/>
-                </StackPanel>
-                <Border Grid.Column="2" Background="{DynamicResource Accent}" CornerRadius="9" MinWidth="18" Height="18" Padding="5,0" Margin="6,0,10,0"
+                    <TextBlock DockPanel.Dock="Left" Text=" - " FontSize="12" Foreground="{DynamicResource Text.Tertiary}" Visibility="{Binding Subtitle, Converter={StaticResource EmptyToCollapsed}}"/>
+                    <TextBlock c:EmoticonText.Text="{Binding Subtitle}" c:EmoticonText.Size="15" FontSize="12" FontStyle="Italic" Foreground="{DynamicResource Text.Tertiary}" TextTrimming="CharacterEllipsis"/>
+                </DockPanel>
+                <Border Grid.Column="2" Background="{DynamicResource Accent.Face}" BorderBrush="{DynamicResource Accent.Border}" BorderThickness="1" CornerRadius="8" MinWidth="18" Height="17" Padding="5,0" Margin="4,0,4,0"
                         Visibility="{Binding Unread, Converter={StaticResource EmptyToCollapsed}}">
-                    <TextBlock Text="{Binding Unread}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource OnAccent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding Unread}" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource OnAccent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
+                <c:AvatarView Grid.Column="3" Width="28" Height="28" Radius="3" RingThickness="1.5" Margin="0,0,5,0"
+                              Source="{Binding Picture}" BuddyColor="{Binding BuddyColor}" Ring="{Binding Status, Converter={StaticResource StatusToBrush}}"/>
             </Grid>
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type vm:GroupViewModel}">
-            <Grid Height="46" Background="Transparent">
+            <Grid Height="34" Background="Transparent">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <c:AvatarView Width="34" Height="34" Radius="5" Margin="10,0,10,0" Glyph="&#xE716;"/>
-                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis"/>
-                    <TextBlock Text="{Binding Subtitle}" FontSize="12" Foreground="{DynamicResource Text.Tertiary}" TextTrimming="CharacterEllipsis"/>
-                </StackPanel>
-                <Border Grid.Column="2" Background="{DynamicResource Accent}" CornerRadius="9" MinWidth="18" Height="18" Padding="5,0" Margin="6,0,10,0"
+                <Grid Width="22" Height="17" Margin="6,0,4,0">
+                    <c:BuddyView Width="15" Height="15" Color="#2F7FE0" HorizontalAlignment="Left" VerticalAlignment="Top" Opacity="0.85"/>
+                    <c:BuddyView Width="15" Height="15" Color="#3FAE2A" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
+                </Grid>
+                <TextBlock Grid.Column="1" VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
+                    <Run Text="{Binding Title, Mode=OneWay}"/>
+                    <Run Text="{Binding Subtitle, Mode=OneWay, StringFormat=' - {0}'}" FontSize="12" FontStyle="Italic" Foreground="{DynamicResource Text.Tertiary}"/>
+                </TextBlock>
+                <Border Grid.Column="2" Background="{DynamicResource Accent.Face}" BorderBrush="{DynamicResource Accent.Border}" BorderThickness="1" CornerRadius="8" MinWidth="18" Height="17" Padding="5,0" Margin="4,0,8,0"
                         Visibility="{Binding Unread, Converter={StaticResource EmptyToCollapsed}}">
-                    <TextBlock Text="{Binding Unread}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource OnAccent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding Unread}" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource OnAccent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
             </Grid>
         </DataTemplate>
@@ -59,158 +66,193 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="34"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
+        <Rectangle Grid.RowSpan="6" Fill="{DynamicResource Bg.Glow}" IsHitTestVisible="False"/>
 
         <!-- Title bar -->
         <DockPanel>
             <Button DockPanel.Dock="Right" Style="{StaticResource Button.CaptionClose}" Content="&#xE8BB;" Click="Close_Click" ToolTip="Close to tray"/>
             <Button DockPanel.Dock="Right" Style="{StaticResource Button.Caption}" Content="&#xE921;" Click="Min_Click" ToolTip="Minimize"/>
-            <StackPanel Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
-                <Image Source="/Assets/PeerDM7.png" Width="16" Height="16" Margin="0,0,8,0"/>
-                <TextBlock Text="PeerDM7" FontSize="12" Foreground="{DynamicResource Text.Secondary}"/>
+            <StackPanel Orientation="Horizontal" Margin="10,0,0,0" VerticalAlignment="Center">
+                <Image Source="/Assets/PeerDM7.png" Width="16" Height="16" Margin="0,0,7,0"/>
+                <TextBlock Text="PeerDM7" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource Text.Heading}"/>
             </StackPanel>
         </DockPanel>
 
-        <!-- Inner panel, framed like the classic contact list -->
-        <Border Grid.Row="1" Margin="8,0,8,0" Background="{DynamicResource Bg.Surface}" BorderBrush="{DynamicResource Border.Default}" BorderThickness="1" CornerRadius="8">
+        <!-- Menu bar -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="5,0,0,2">
+            <Button x:Name="FileMenuButton" Style="{StaticResource Button.MenuBar}" Content="_File" Click="FileMenu_Click"/>
+            <Button x:Name="ContactsMenuButton" Style="{StaticResource Button.MenuBar}" Content="_Contacts" Click="ContactsMenu_Click"/>
+            <Button x:Name="ToolsMenuButton" Style="{StaticResource Button.MenuBar}" Content="_Tools" Click="ToolsMenu_Click"/>
+            <Button x:Name="HelpMenuButton" Style="{StaticResource Button.MenuBar}" Content="_Help" Click="HelpMenu_Click"/>
+        </StackPanel>
+
+        <!-- Me -->
+        <Grid Grid.Row="2" Margin="12,6,12,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Button Style="{StaticResource Button.Subtle}" Padding="2" Click="Picture_Click" ToolTip="Change your display picture" AutomationProperties.Name="Change display picture">
+                <c:AvatarView Width="64" Height="64" Radius="5" Source="{Binding Picture}" BuddyColor="{Binding BuddyColor}" Ring="{Binding Status, Converter={StaticResource StatusToBrush}}"/>
+            </Button>
+            <StackPanel Grid.Column="1" Margin="8,2,0,0" VerticalAlignment="Center">
+                <Button x:Name="StatusButton" Style="{StaticResource Button.Subtle}" Padding="4,1" MinHeight="0" HorizontalAlignment="Left" Click="Status_Click" ToolTip="Change your status" AutomationProperties.Name="Change status">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource Text.Primary}" TextTrimming="CharacterEllipsis" MaxWidth="140"/>
+                        <TextBlock Text="{Binding StatusLabel, StringFormat=' ({0})'}" FontSize="12.5" Foreground="{DynamicResource Text.Secondary}" VerticalAlignment="Center"/>
+                        <TextBlock Text="&#xE70D;" Style="{StaticResource Text.Icon}" FontSize="8" Margin="5,2,0,0" Foreground="{DynamicResource Text.Secondary}"/>
+                    </StackPanel>
+                    <Button.ContextMenu>
+                        <ContextMenu x:Name="StatusMenu">
+                            <MenuItem Header="Online" Tag="Online" Click="SetStatus_Click"/>
+                            <MenuItem Header="Away" Tag="Away" Click="SetStatus_Click"/>
+                            <MenuItem Header="Busy" Tag="Busy" Click="SetStatus_Click"/>
+                        </ContextMenu>
+                    </Button.ContextMenu>
+                </Button>
+                <TextBox Style="{StaticResource TextBox.Inline}" c:Hint.Text="&lt;Share a quick message&gt;" MaxLength="120" Margin="1,2,0,0"
+                         Text="{Binding PersonalMessage, UpdateSourceTrigger=LostFocus}" KeyDown="Psm_KeyDown"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Search -->
+        <DockPanel Grid.Row="3" Margin="10,0,10,6">
+            <Button DockPanel.Dock="Right" Style="{StaticResource Button.Standard}" Width="32" Padding="0" Margin="5,0,0,0" Click="NewGroup_Click" ToolTip="Start a group chat" AutomationProperties.Name="New group">
+                <Grid Width="20" Height="16">
+                    <c:BuddyView Width="14" Height="14" Color="#2F7FE0" HorizontalAlignment="Left" VerticalAlignment="Top" Opacity="0.85"/>
+                    <c:BuddyView Width="14" Height="14" Color="#3FAE2A" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
+                </Grid>
+            </Button>
+            <Grid>
+                <TextBox c:Hint.Text="Find a contact..." Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" Padding="26,5,8,5"/>
+                <TextBlock Text="&#xE721;" Style="{StaticResource Text.Icon}" FontSize="12" HorizontalAlignment="Left" Margin="9,0,0,0" Foreground="{DynamicResource Text.Tertiary}" IsHitTestVisible="False"/>
+            </Grid>
+        </DockPanel>
+
+        <!-- Contact list and "I want to..." -->
+        <Border Grid.Row="4" Margin="8,0,8,0" Style="{StaticResource Panel}">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- My status -->
-                <Border Background="{DynamicResource Header.Band}" CornerRadius="8,8,0,0" Padding="12,12,12,10">
-                    <StackPanel>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <c:AvatarView Width="54" Height="54" Radius="7" RingThickness="2.5" Initials="{Binding Initials}" Ring="{Binding Status, Converter={StaticResource StatusToBrush}}"/>
-                            <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="My status" FontSize="11.5" Foreground="{DynamicResource Text.Tertiary}" Margin="3,0,0,0"/>
-                                <Button x:Name="StatusButton" Style="{StaticResource Button.Subtle}" Padding="3,1" MinHeight="0" HorizontalAlignment="Left" Click="Status_Click" AutomationProperties.Name="Change status" ToolTip="Change your status">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding Name}" FontFamily="{StaticResource Font.Display}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" MaxWidth="150"/>
-                                        <TextBlock Text="{Binding StatusLabel, StringFormat=' ({0})'}" FontSize="13" Foreground="{DynamicResource Text.Secondary}" VerticalAlignment="Center"/>
-                                        <TextBlock Text="&#xE70D;" Style="{StaticResource Text.Icon}" FontSize="9" Margin="6,2,0,0" Foreground="{DynamicResource Text.Secondary}"/>
-                                    </StackPanel>
-                                    <Button.ContextMenu>
-                                        <ContextMenu x:Name="StatusMenu">
-                                            <MenuItem Header="Online" Tag="Online" Click="SetStatus_Click"/>
-                                            <MenuItem Header="Away" Tag="Away" Click="SetStatus_Click"/>
-                                            <MenuItem Header="Busy" Tag="Busy" Click="SetStatus_Click"/>
-                                        </ContextMenu>
-                                    </Button.ContextMenu>
-                                </Button>
-                                <TextBox Style="{StaticResource TextBox.Inline}" c:Hint.Text="Share a quick message" MaxLength="120"
-                                         Text="{Binding PersonalMessage, UpdateSourceTrigger=LostFocus}" KeyDown="Psm_KeyDown"/>
-                            </StackPanel>
-                        </Grid>
-                        <Rectangle Height="2" Fill="{DynamicResource Accent.Rule}" Margin="0,10,0,0" RadiusX="1" RadiusY="1"/>
-                    </StackPanel>
-                </Border>
+                <ListBox x:Name="List" AutomationProperties.Name="People" ItemsSource="{Binding View}" BorderThickness="0" Background="Transparent" ItemContainerStyle="{StaticResource Row}"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled" MouseDoubleClick="List_DoubleClick" KeyDown="List_KeyDown"
+                         VirtualizingPanel.IsVirtualizingWhenGrouping="True" Padding="0,2,0,6">
+                    <ListBox.GroupStyle>
+                        <GroupStyle>
+                            <GroupStyle.ContainerStyle>
+                                <Style TargetType="GroupItem">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="GroupItem">
+                                                <Expander Style="{StaticResource Expander.Section}">
+                                                    <Expander.Header>
+                                                        <TextBlock FontWeight="Bold" FontSize="12.5" Foreground="{DynamicResource Text.Heading}">
+                                                            <Run Text="{Binding Name, Mode=OneWay}"/> <Run Text="{Binding ItemCount, Mode=OneWay, StringFormat=({0})}"/>
+                                                        </TextBlock>
+                                                    </Expander.Header>
+                                                    <ItemsPresenter/>
+                                                </Expander>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </GroupStyle.ContainerStyle>
+                        </GroupStyle>
+                    </ListBox.GroupStyle>
+                    <ListBox.ContextMenu>
+                        <ContextMenu Opened="ListMenu_Opened">
+                            <MenuItem x:Name="MenuOpen" Header="Send a message" Click="MenuOpen_Click"/>
+                            <MenuItem x:Name="MenuGroupWith" Header="Start a group chat with them" Click="MenuGroupWith_Click"/>
+                            <MenuItem x:Name="MenuLeave" Header="Leave group" Click="MenuLeave_Click"/>
+                        </ContextMenu>
+                    </ListBox.ContextMenu>
+                </ListBox>
 
-                <TextBox Grid.Row="1" Margin="10,8,10,4" c:Hint.Text="Search people and groups" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}"/>
-
-                <!-- People -->
-                <Grid Grid.Row="2">
-                    <ListBox x:Name="List" AutomationProperties.Name="People" ItemsSource="{Binding View}" BorderThickness="0" Background="Transparent" ItemContainerStyle="{StaticResource Row}"
-                             ScrollViewer.HorizontalScrollBarVisibility="Disabled" MouseDoubleClick="List_DoubleClick" KeyDown="List_KeyDown"
-                             VirtualizingPanel.IsVirtualizingWhenGrouping="True" Padding="0,0,0,6">
-                        <ListBox.GroupStyle>
-                            <GroupStyle>
-                                <GroupStyle.ContainerStyle>
-                                    <Style TargetType="GroupItem">
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="GroupItem">
-                                                    <Expander Style="{StaticResource Expander.Section}">
-                                                        <Expander.Header>
-                                                            <TextBlock FontWeight="SemiBold" FontSize="12.5" Foreground="{DynamicResource Text.Secondary}">
-                                                                <Run Text="{Binding Name, Mode=OneWay}"/> <Run Text="{Binding ItemCount, Mode=OneWay, StringFormat=({0})}"/>
-                                                            </TextBlock>
-                                                        </Expander.Header>
-                                                        <ItemsPresenter/>
-                                                    </Expander>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Style>
-                                </GroupStyle.ContainerStyle>
-                            </GroupStyle>
-                        </ListBox.GroupStyle>
-                        <ListBox.ContextMenu>
-                            <ContextMenu Opened="ListMenu_Opened">
-                                <MenuItem x:Name="MenuOpen" Header="Send a message" Click="MenuOpen_Click"/>
-                                <MenuItem x:Name="MenuGroupWith" Header="Start a group chat with them" Click="MenuGroupWith_Click"/>
-                                <MenuItem x:Name="MenuLeave" Header="Leave group" Click="MenuLeave_Click"/>
-                            </ContextMenu>
-                        </ListBox.ContextMenu>
-                    </ListBox>
-
-                    <!-- Empty state -->
-                    <StackPanel VerticalAlignment="Center" Margin="26,0,26,30" Visibility="{Binding NobodyOnline, Converter={StaticResource BoolToVis}}" IsHitTestVisible="False">
-                        <TextBlock Text="&#xE716;" Style="{StaticResource Text.Icon}" FontSize="28" Foreground="{DynamicResource Text.Tertiary}" Margin="0,0,0,12"/>
-                        <TextBlock Text="Looking for people on your network" FontWeight="SemiBold" TextAlignment="Center" TextWrapping="Wrap"/>
-                        <TextBlock Margin="0,6,0,0" FontSize="12" Foreground="{DynamicResource Text.Secondary}" TextAlignment="Center" TextWrapping="Wrap"
-                                   Text="Anyone running PeerDM7 on the same Wi-Fi or LAN shows up here by themselves. If someone is on another subnet, add them by address below."/>
-                    </StackPanel>
-                </Grid>
+                <!-- Empty state -->
+                <StackPanel VerticalAlignment="Center" Margin="22,0,22,20" Visibility="{Binding NobodyOnline, Converter={StaticResource BoolToVis}}" IsHitTestVisible="False">
+                    <Grid Width="54" Height="44" Margin="0,0,0,12" Opacity="0.75">
+                        <c:BuddyView Width="34" Height="34" Color="#2F7FE0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                        <c:BuddyView Width="34" Height="34" Color="#3FAE2A" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
+                    </Grid>
+                    <TextBlock Text="Looking for people on your network" FontWeight="SemiBold" TextAlignment="Center" TextWrapping="Wrap"/>
+                    <TextBlock Margin="0,6,0,0" FontSize="12" Foreground="{DynamicResource Text.Secondary}" TextAlignment="Center" TextWrapping="Wrap"
+                               Text="Anyone running PeerDM7 on the same network shows up here by themselves. Someone on another subnet can be added by address below."/>
+                </StackPanel>
 
                 <!-- I want to... -->
-                <Border Grid.Row="3" BorderBrush="{DynamicResource Border.Default}" BorderThickness="0,1,0,0" Padding="6,4,6,8">
-                    <Expander Style="{StaticResource Expander.Section}" IsExpanded="True">
-                        <Expander.Header>
-                            <TextBlock Text="I want to..." FontWeight="SemiBold" FontSize="12.5" Foreground="{DynamicResource Text.Secondary}"/>
-                        </Expander.Header>
-                        <StackPanel Margin="0,2,0,0">
-                            <Button Style="{StaticResource Button.Action}" Click="SendMessage_Click" AutomationProperties.Name="Send a message">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="&#xE8BD;" Style="{StaticResource Text.Icon}" Foreground="{DynamicResource Accent.Text}" Margin="0,0,12,0"/>
-                                    <TextBlock Text="Send a message"/>
-                                </StackPanel>
-                            </Button>
-                            <Button Style="{StaticResource Button.Action}" Click="NewGroup_Click" AutomationProperties.Name="Start a group chat">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="&#xE716;" Style="{StaticResource Text.Icon}" Foreground="{DynamicResource Accent.Text}" Margin="0,0,12,0"/>
-                                    <TextBlock Text="Start a group chat"/>
-                                </StackPanel>
-                            </Button>
-                            <Button Style="{StaticResource Button.Action}" Click="AddByIp_Click" AutomationProperties.Name="Add someone by address">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="&#xE710;" Style="{StaticResource Text.Icon}" Foreground="{DynamicResource Accent.Text}" Margin="0,0,12,0"/>
-                                    <TextBlock Text="Add someone by address"/>
-                                </StackPanel>
-                            </Button>
-                            <StackPanel x:Name="IpPanel" Visibility="Collapsed" Margin="10,6,4,0">
-                                <DockPanel>
-                                    <Button x:Name="IpGo" DockPanel.Dock="Right" Style="{StaticResource Button.Accent}" Content="Connect" Margin="6,0,0,0" Padding="12,0" Click="IpGo_Click"/>
-                                    <TextBox x:Name="IpBox" c:Hint.Text="192.168.1.23" KeyDown="IpBox_KeyDown"/>
-                                </DockPanel>
-                                <TextBlock x:Name="IpResult" FontSize="12" Margin="2,6,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
+                <StackPanel Grid.Row="1">
+                    <Border Background="{DynamicResource Band}" BorderBrush="{DynamicResource Border.Soft}" BorderThickness="0,1,0,1">
+                        <Expander x:Name="IWantTo" Style="{StaticResource Expander.Section}" IsExpanded="True" Margin="0,-4,0,-2">
+                            <Expander.Header>
+                                <TextBlock Text="I want to..." FontWeight="Bold" FontSize="12.5" Foreground="{DynamicResource Text.Heading}"/>
+                            </Expander.Header>
+                        </Expander>
+                    </Border>
+                    <StackPanel Margin="4,3,4,6" Visibility="{Binding IsExpanded, ElementName=IWantTo, Converter={StaticResource BoolToVis}}">
+                        <Button Style="{StaticResource Button.Action}" Click="SendMessage_Click" AutomationProperties.Name="Send a message">
+                            <StackPanel Orientation="Horizontal">
+                                <c:BuddyView Width="16" Height="16" Color="#2F7FE0" Margin="0,0,10,0"/>
+                                <TextBlock Text="Send an instant message"/>
                             </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource Button.Action}" Click="SendFileAction_Click" AutomationProperties.Name="Send a file">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE8A5;" Style="{StaticResource Text.Icon}" Foreground="{DynamicResource Accent.Text}" Margin="1,0,11,0"/>
+                                <TextBlock Text="Send a file or photo"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource Button.Action}" Click="NewGroup_Click" AutomationProperties.Name="Start a group chat">
+                            <StackPanel Orientation="Horizontal">
+                                <Grid Width="18" Height="16" Margin="0,0,9,0">
+                                    <c:BuddyView Width="13" Height="13" Color="#2F7FE0" HorizontalAlignment="Left" VerticalAlignment="Top" Opacity="0.85"/>
+                                    <c:BuddyView Width="13" Height="13" Color="#3FAE2A" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
+                                </Grid>
+                                <TextBlock Text="Start a group chat"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource Button.Action}" Click="AddByIp_Click" AutomationProperties.Name="Add someone by address">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE710;" Style="{StaticResource Text.Icon}" Foreground="#3FAE2A" FontWeight="Bold" Margin="1,0,11,0"/>
+                                <TextBlock Text="Add a contact by address"/>
+                            </StackPanel>
+                        </Button>
+                        <StackPanel x:Name="IpPanel" Visibility="Collapsed" Margin="8,4,4,0">
+                            <DockPanel>
+                                <Button x:Name="IpGo" DockPanel.Dock="Right" Style="{StaticResource Button.Accent}" Content="Connect" Margin="6,0,0,0" Padding="12,0" Click="IpGo_Click"/>
+                                <TextBox x:Name="IpBox" c:Hint.Text="192.168.1.23" KeyDown="IpBox_KeyDown"/>
+                            </DockPanel>
+                            <TextBlock x:Name="IpResult" FontSize="12" Margin="2,6,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
                         </StackPanel>
-                    </Expander>
-                </Border>
+                    </StackPanel>
+                </StackPanel>
             </Grid>
         </Border>
 
         <!-- Footer brand -->
-        <StackPanel Grid.Row="2" Margin="16,10,16,10">
+        <StackPanel Grid.Row="5" Margin="14,8,14,9">
             <DockPanel>
-                <TextBlock DockPanel.Dock="Right" Text="{Binding NetworkLine}" FontSize="11" Foreground="{DynamicResource Text.Tertiary}" VerticalAlignment="Bottom" Margin="0,0,0,2"/>
-                <TextBlock FontFamily="{StaticResource Font.Display}" FontSize="17">
-                    <Run Text="Peer" FontWeight="Bold" Foreground="{DynamicResource Accent.Text}"/><Run Text="DM7" FontWeight="SemiBold"/>
-                </TextBlock>
+                <TextBlock DockPanel.Dock="Right" Text="{Binding NetworkLine}" FontSize="10.5" Foreground="{DynamicResource Text.Tertiary}" VerticalAlignment="Bottom" Margin="0,0,0,3"/>
+                <StackPanel Orientation="Horizontal">
+                    <Grid Width="26" Height="22" Margin="0,0,6,0">
+                        <c:BuddyView Width="18" Height="18" Color="#2F7FE0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                        <c:BuddyView Width="18" Height="18" Color="#3FAE2A" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
+                    </Grid>
+                    <TextBlock FontSize="18" VerticalAlignment="Center">
+                        <Run Text="peer" FontWeight="Bold" FontStyle="Italic" Foreground="{DynamicResource Accent.Text}"/><Run Text="DM7" FontWeight="SemiBold" Foreground="{DynamicResource Text.Primary}"/>
+                    </TextBlock>
+                </StackPanel>
             </DockPanel>
-            <Rectangle Height="2" Fill="{DynamicResource Accent.Rule}" Margin="0,6,0,0" RadiusX="1" RadiusY="1"/>
+            <Rectangle Height="2" Fill="{DynamicResource Accent.Rule}" Margin="0,5,0,0"/>
         </StackPanel>
     </Grid>
 </v:ChromeWindow>

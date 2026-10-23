@@ -1,4 +1,7 @@
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.IO;
+using System.Security.Cryptography;
 using System.ComponentModel;
 using System.Net;
 using System.Text.Json.Nodes;
@@ -29,7 +32,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     {
         _ui = Dispatcher.CurrentDispatcher;
         _name = name;
-        _net = new PeerNetwork(_me, () => new PeerProfile { Name = Name, PersonalMessage = PersonalMessage, Status = Status });
+        _net = new PeerNetwork(_me, () => new PeerProfile { Name = Name, PersonalMessage = PersonalMessage, Status = Status, Picture = _myPicture });
 
         View = (ListCollectionView)CollectionViewSource.GetDefaultView(Items);
         View.GroupDescriptions.Add(new PropertyGroupDescription(nameof(ListItem.Section)));
@@ -50,7 +53,12 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _net.MessageReceived += (id, m) => Ui(() => OnDirectMessage(id, m));
         _net.Delivered += (id, mid) => Ui(() => OnDelivered(id, null, mid));
         _net.TypingChanged += (id, gid, on) => Ui(() => OnTyping(id, gid, on));
-        _net.OtherFrame += (id, f) => Ui(() => OnOtherFrame(id, f));
+        _net.OtherFrame += (id, f) =>
+        {
+            // File chunks are written straight from the network thread; everything else goes to the UI.
+            if ((string?)f["t"] == "filechunk") OnChunk(id, f);
+            else Ui(() => OnOtherFrame(id, f));
+        };
 
         _tick = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Background, (_, _) =>
         {
@@ -66,6 +74,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     }
 
     void Ui(Action a) => _ui.BeginInvoke(a);
+    public void OnUi(Action a) => _ui.BeginInvoke(a);
 
     // ---- me ----
 
@@ -84,6 +93,18 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     }
 
     public string Initials => Images.Initials(Name);
+    public System.Windows.Media.Color BuddyColor => Controls.BuddyView.DefaultFor(Name);
+
+    byte[]? _myPicture;
+    System.Windows.Media.ImageSource? _myPictureImage;
+    public System.Windows.Media.ImageSource? Picture { get => _myPictureImage; private set => Set(ref _myPictureImage, value); }
+
+    public void SetPicture(byte[]? jpeg)
+    {
+        _myPicture = jpeg;
+        Picture = Controls.BuddyView.ToImage(jpeg);
+        _net.BroadcastProfile();
+    }
 
     string _psm = "";
     public string PersonalMessage
@@ -179,7 +200,55 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public void SendText(ConversationViewModel conv, string text) => Post(conv, text, MessageKind.Text);
 
-    public void SendNudge(ConversationViewModel conv) => Post(conv, "", MessageKind.Nudge);
+    // ---- spam limits ----
+    // Sending: a burst of 5 messages, then one every 1.2 seconds. Nudges: one per 15 seconds.
+    // Receiving: the same idea per person, so a modified client cannot flood anyone either.
+
+    static readonly TimeSpan NudgeGap = TimeSpan.FromSeconds(15);
+    readonly TokenBucket _sendBucket = new(5, TimeSpan.FromMilliseconds(1200));
+    readonly Dictionary<string, DateTime> _lastNudgeSent = new();
+    readonly Dictionary<string, TokenBucket> _incoming = new();
+    readonly Dictionary<string, DateTime> _lastNudgeIn = new();
+    readonly Dictionary<string, DateTime> _floodNoticeShown = new();
+
+    public bool TryTakeSendToken() => _sendBucket.TryTake();
+
+    public void SendNudge(ConversationViewModel conv)
+    {
+        if (_lastNudgeSent.TryGetValue(conv.Key, out var last) && DateTime.UtcNow - last < NudgeGap)
+        {
+            var wait = (int)Math.Ceiling((NudgeGap - (DateTime.UtcNow - last)).TotalSeconds);
+            conv.ShowNotice($"You can send another nudge in {wait} seconds.");
+            return;
+        }
+        if (!_sendBucket.TryTake())
+        {
+            conv.ShowNotice("Slow down a little. You can send again in a moment.");
+            return;
+        }
+        _lastNudgeSent[conv.Key] = DateTime.UtcNow;
+        Post(conv, "", MessageKind.Nudge);
+    }
+
+    /// <summary>False when this person is sending faster than any human types.</summary>
+    bool AllowIncoming(string senderId, ConversationViewModel conv, MessageKind kind)
+    {
+        if (kind == MessageKind.Nudge)
+        {
+            if (_lastNudgeIn.TryGetValue(senderId, out var last) && DateTime.UtcNow - last < NudgeGap) return false;
+            _lastNudgeIn[senderId] = DateTime.UtcNow;
+        }
+        if (!_incoming.TryGetValue(senderId, out var bucket))
+            _incoming[senderId] = bucket = new TokenBucket(8, TimeSpan.FromMilliseconds(700));
+        if (bucket.TryTake()) return true;
+
+        if (!_floodNoticeShown.TryGetValue(senderId, out var shown) || DateTime.UtcNow - shown > TimeSpan.FromSeconds(10))
+        {
+            _floodNoticeShown[senderId] = DateTime.UtcNow;
+            conv.ShowNotice($"{NameOf(senderId)} is sending messages too fast. Some were hidden.");
+        }
+        return false;
+    }
 
     void Post(ConversationViewModel conv, string text, MessageKind kind)
     {
@@ -221,10 +290,11 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    void Receive(ConversationViewModel conv, ChatMessage m, string senderId)
+    void Receive(ConversationViewModel conv, ChatMessage m, string senderId, FileTransfer? transfer = null)
     {
         if (!_seenMessageIds.Add(m.Id)) return;
-        var vm = new MessageViewModel(m, conv, mine: false, NameOf(senderId));
+        if (!AllowIncoming(senderId, conv, m.Kind)) return;
+        var vm = new MessageViewModel(m, conv, mine: false, NameOf(senderId)) { Transfer = transfer };
         conv.Add(vm);
 
         var item = (ListItem?)conv.Group ?? conv.Contact!;
@@ -235,6 +305,10 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         {
             if (DateTimeOffset.Now - m.Time < TimeSpan.FromMinutes(1)) conv.RaiseNudge();
             if (!conv.IsActive) Notify?.Invoke(conv, $"{vm.SenderName} sent you a nudge.");
+        }
+        else if (m.Kind == MessageKind.File)
+        {
+            if (!conv.IsActive) Notify?.Invoke(conv, $"Wants to send you {m.Text}");
         }
         else if (!conv.IsActive)
         {
@@ -265,6 +339,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         if (!_contacts.TryGetValue(id, out var c)) return;
         c.Status = PeerStatus.Offline;
         foreach (var conv in _conversations.Values) conv.SetTyping(id, false);
+        foreach (var t in _transfers.Values.Where(t => t.PeerId == id && (t.IsActive || t.State == TransferState.Offered)))
+            t.Fail($"{c.Title} went offline.");
         RaiseCounts();
     }
 
@@ -273,6 +349,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         var c = ContactFor(id);
         c.Name = p.Name.Length > 0 ? p.Name : c.Name;
         c.PersonalMessage = p.PersonalMessage;
+        c.SetPicture(p.Picture);
         c.Status = _net.IsConnected(id) ? p.Status : PeerStatus.Offline;
         foreach (var g in _groups.Values)
             foreach (var m in g.Record.Members.Where(m => m.Id == id)) m.Name = c.Name;
@@ -304,6 +381,13 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         {
             case "group": OnGroupFrame(id, f); break;
             case "gmsg": OnGroupMessage(id, f); break;
+            case "fileoffer": OnFileOffer(id, f); break;
+            case "fileaccept":
+            case "filedecline":
+            case "filecancel":
+            case "filegot":
+                OnFileControl(id, f);
+                break;
             case "gack":
                 if ((string?)f["gid"] is { } gid && (string?)f["id"] is { } mid) OnDelivered(id, gid, mid);
                 break;
@@ -462,6 +546,120 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         Members = r.Members.Select(m => new GroupMember { Id = m.Id, Name = m.Name }).ToList(),
     };
 
+    // ---- files ----
+
+    readonly ConcurrentDictionary<string, FileTransfer> _transfers = new();
+
+    public int InFlight(string peerId) => _net.InFlight(peerId);
+    public Task<bool> SendFileFrame(string peerId, JsonObject frame) => _net.SendAsync(peerId, frame);
+
+    public async void SendFile(ConversationViewModel conv, string path)
+    {
+        if (conv.IsGroup || conv.Contact is null) return;
+        FileInfo info;
+        try { info = new FileInfo(path); } catch { return; }
+        if (!info.Exists) return;
+        if (info.Length > FileTransfer.MaxSize)
+        {
+            conv.ShowNotice("That file is too big. The limit is 2 GB.");
+            return;
+        }
+        if (!conv.Contact.IsOnline)
+        {
+            conv.ShowNotice($"{conv.Title} needs to be online to receive files.");
+            return;
+        }
+
+        var t = new FileTransfer(this, Guid.NewGuid().ToString("N"), conv.Contact.Id, conv.Title, FileTransfer.SafeName(info.Name), info.Length, incoming: false)
+        {
+            SourcePath = info.FullName,
+            State = TransferState.Preparing,
+        };
+        _transfers[t.Id] = t;
+        var msg = new ChatMessage { Id = t.Id, From = MyId, Text = t.Name, Time = DateTimeOffset.Now, Kind = MessageKind.File };
+        conv.Add(new MessageViewModel(msg, conv, mine: true, Name) { Transfer = t });
+
+        try
+        {
+            await using var fs = new FileStream(info.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
+            t.Hash = Convert.ToHexString(await SHA256.HashDataAsync(fs));
+        }
+        catch (Exception ex)
+        {
+            t.Fail("Could not read the file: " + ex.Message);
+            return;
+        }
+        if (t.State != TransferState.Preparing) return;
+
+        var ok = await _net.SendAsync(t.PeerId, new JsonObject
+        {
+            ["t"] = "fileoffer",
+            ["fid"] = t.Id,
+            ["name"] = t.Name,
+            ["size"] = t.Size,
+            ["sha"] = t.Hash,
+            ["ts"] = msg.Time.ToUnixTimeMilliseconds(),
+        });
+        if (ok) t.State = TransferState.Waiting;
+        else t.Fail($"{conv.Title} went offline.");
+    }
+
+    void OnFileOffer(string from, JsonObject f)
+    {
+        var fid = (string?)f["fid"];
+        var size = (long?)f["size"] ?? -1;
+        var sha = (string?)f["sha"];
+        if (string.IsNullOrEmpty(fid) || fid.Length > 64 || size < 0 || size > FileTransfer.MaxSize || sha is not { Length: 64 }) return;
+        if (_transfers.ContainsKey(fid)) return;
+
+        var contact = ContactFor(from);
+        var conv = ConversationFor(contact);
+        var t = new FileTransfer(this, fid, from, contact.Title, FileTransfer.SafeName((string?)f["name"] ?? "file"), size, incoming: true)
+        {
+            Hash = sha,
+            State = TransferState.Offered,
+        };
+        _transfers[fid] = t;
+        Receive(conv, new ChatMessage
+        {
+            Id = fid,
+            From = from,
+            Text = t.Name,
+            Time = DateTimeOffset.FromUnixTimeMilliseconds((long?)f["ts"] ?? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()),
+            Kind = MessageKind.File,
+        }, from, t);
+    }
+
+    void OnFileControl(string from, JsonObject f)
+    {
+        if ((string?)f["fid"] is not { } fid || !_transfers.TryGetValue(fid, out var t) || t.PeerId != from) return;
+        switch ((string?)f["t"])
+        {
+            case "fileaccept" when !t.Incoming && t.State == TransferState.Waiting:
+                t.StartSending();
+                break;
+            case "filedecline" when !t.Incoming:
+                t.State = TransferState.Declined;
+                break;
+            case "filecancel":
+                t.Cancel(notify: false);
+                break;
+            case "filegot" when !t.Incoming:
+                t.Progress = 1;
+                t.State = TransferState.Done;
+                break;
+        }
+    }
+
+    void OnChunk(string from, JsonObject f)
+    {
+        if ((string?)f["fid"] is not { } fid || !_transfers.TryGetValue(fid, out var t) || !t.Incoming || t.PeerId != from) return;
+        if ((int?)f["i"] is not { } i || (string?)f["d"] is not { } d) return;
+        byte[] data;
+        try { data = Convert.FromBase64String(d); } catch { return; }
+        t.OnChunk(i, data);
+    }
+
     // ---- manual connect ----
 
     public async Task<string?> ConnectByAddress(string text)
@@ -473,8 +671,26 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
+        foreach (var t in _transfers.Values) t.Cancel(notify: false);
         _tick.Stop();
         _net.Dispose();
         _me.Dispose();
+    }
+}
+
+/// <summary>Allows a burst, then refills one token per interval.</summary>
+public sealed class TokenBucket(int capacity, TimeSpan refill)
+{
+    double _tokens = capacity;
+    DateTime _last = DateTime.UtcNow;
+
+    public bool TryTake()
+    {
+        var now = DateTime.UtcNow;
+        _tokens = Math.Min(capacity, _tokens + (now - _last).TotalMilliseconds / refill.TotalMilliseconds);
+        _last = now;
+        if (_tokens < 1) return false;
+        _tokens -= 1;
+        return true;
     }
 }

@@ -14,26 +14,36 @@
 </p>
 
 <p align="center">
-  <img src="docs/contact-list.png" width="260" alt="Contact list">
+  <img src="docs/contact-list.png" width="250" alt="Contact list, white theme">
   &nbsp;
-  <img src="docs/group-chat.png" width="440" alt="Group chat window">
+  <img src="docs/chat.png" width="460" alt="Conversation with emoticons and display pictures">
+</p>
+<p align="center">
+  <img src="docs/contact-list-dark.png" width="250" alt="Contact list, dark theme">
+  &nbsp;
+  <img src="docs/group-chat-dark.png" width="460" alt="Group chat, dark theme">
 </p>
 
 ## What it does
 
 - **Finds people by itself.** Everyone running PeerDM7 on the same Wi-Fi or LAN shows up in your list within a few seconds.
-- **Direct messages** in a classic conversation window: "Name says:", display pictures, typing indicator.
-- **Group chats up to 20 people.** Pick people, name the group, and everyone gets it. Anyone in the group can add more people or leave.
+- **Direct messages** in a classic conversation window: "Name says:", both display pictures on the right, typing indicator.
+- **Emoticons.** Type the old codes, `:)` `:D` `;)` `:P` `:(` `:'(` `:@` `:O` `:S` `:$` `(H)` `8-|` `|-)` `+o(` `(A)` `(6)` `:-*` `(L)` `(U)` `(*)` `(Y)` `(N)`, or pick them from the smiley menu.
+- **Display pictures.** Built-in aero guys in eight colours, or any picture of your own. Everyone sees it next to your name.
+- **Send files and photos** up to 2 GB, with accept or decline, a progress bar, and a SHA-256 check. Files land in your Downloads folder.
+- **Group chats up to 20 people.** Pick people, name the group, and everyone gets it. Anyone in the group can invite more people or leave.
 - **Nudges.** Shake someone's chat window. It still works.
+- **No spamming.** Five messages in a burst, then one every 1.2 seconds, and one nudge per 15 seconds. The same limits apply to what you receive, so a modified copy cannot flood you either.
 - **Status and a personal message** (Online, Away, Busy) shown next to your name.
 - **Pop-up notifications** in the corner and a flashing taskbar button when a message arrives.
 - **Add by address** for someone on a different subnet: type their IP, shown at the bottom of their window.
-- Follows the Windows light or dark theme.
+- **White or dark theme**, under Tools.
 
 ## Nothing is saved
 
-Sign-in is just a username. Your name, your contacts, every message and every group live in memory only.
-Close PeerDM7 (tray icon, **Sign out and quit**) and all of it is gone. Nothing is written to disk.
+Sign-in is just a username. Your name, picture, contacts, every message and every group live in memory only.
+Close PeerDM7 (tray icon, **Sign out and quit**) and all of it is gone. The only thing PeerDM7 ever writes to disk
+is a file you choose to accept, saved to your Downloads folder.
 
 ## Getting started
 
@@ -68,6 +78,7 @@ Wired lab PCs usually do not do this. If people never show up on a Wi-Fi network
 | Encryption | Each person signs a session key exchange (ECDH P-256) with a per-session identity key. Every packet is AES-256-GCM. A person's ID is a hash of their identity key, so a name can be copied but an ID cannot. |
 | Reliability | Sequence numbers, acknowledgements and retransmits on top of UDP. Pings every 4 seconds keep the path open. |
 | Groups | Full mesh: every message goes straight to each member. Membership changes carry a version number, and the newest version wins on every PC. |
+| Files | Offered with name, size and SHA-256. After accepting, 16 KB chunks flow over the same encrypted channel, paced so only a few hundred KB are in flight. The receiver checks the hash before the file appears. |
 
 Identity keys are created fresh each time you sign in. That is what makes chats disappear for real: after a restart you are a new person to everyone else.
 
@@ -88,27 +99,38 @@ Handy flags while developing:
 
 | Flag | Effect |
 | --- | --- |
-| `--name "Ana"` | Skip the sign-in screen |
+| `--name "Dave"` | Skip the sign-in screen |
 | `--quiet` | No notification sounds |
+| `--dark` | Start in the dark theme |
 | `--log path.txt` | Write a diagnostic log to that file |
 
 Several copies can run on one PC for testing; each gets its own port and they find each other through introductions.
+
+An end-to-end smoke test runs two real sessions over the real network code and checks discovery, messages, receipts,
+the spam limits, display pictures, a 5 MB file transfer and group creation:
+
+```powershell
+dotnet run --project tests/PeerDM7.Smoke
+```
 
 ## Project layout
 
 ```
 src/PeerDM7/
+  Controls/     aero guy, emoticons, display picture frame
   Core/         message and group models, session identity
-  Net/          discovery, encrypted sessions, connection management
-  ViewModels/   contact list, conversations, group sync
-  Views/        sign-in, contact list, chat, people picker, toast
-  Themes/       light and dark tokens, control styles
+  Net/          UDP mesh: discovery, encryption, reliability
+  ViewModels/   contact list, conversations, groups, file transfers, spam limits
+  Views/        sign-in, contact list, chat, people picker, display picture, toast
+  Themes/       white and dark tokens, Aero control styles
+tests/PeerDM7.Smoke/   end-to-end test
 ```
 
 ## Known limits
 
 - Messages are delivered only while both people are signed in. There is no offline storage, by design.
-- No file transfer, emoticons or chat history yet.
+- Files can be sent in one-to-one chats, not to groups yet.
+- No chat history, by design.
 - PCs on different subnets need to be added by address, by both people if their networks block incoming traffic.
 - Wi-Fi networks with client isolation block all device-to-device traffic. Nothing on the PC can fix that.
 - On very large networks, probes cover the 1022 addresses around you; people further away appear once someone in between connects to both.

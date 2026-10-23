@@ -16,7 +16,7 @@
             <TextBlock x:Name="Heading" Margin="14,0,0,0" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource Text.Secondary}"/>
         </DockPanel>
 
-        <Border Grid.Row="1" Margin="8,0,8,0" Background="{DynamicResource Bg.Surface}" BorderBrush="{DynamicResource Border.Default}" BorderThickness="1" CornerRadius="8" Padding="14,12">
+        <Border Grid.Row="1" Margin="8,0,8,0" Style="{StaticResource Panel}" Padding="14,12">
             <DockPanel>
                 <StackPanel x:Name="NamePanel" DockPanel.Dock="Top" Margin="0,0,0,12">
                     <TextBlock Text="Group name" FontSize="12" Foreground="{DynamicResource Text.Secondary}" Margin="0,0,0,6"/>
@@ -30,7 +30,7 @@
                                 <DataTemplate>
                                     <CheckBox AutomationProperties.Name="{Binding Contact.Title}" IsChecked="{Binding IsChecked}" IsEnabled="{Binding IsEnabled}" Margin="2,5" Checked="Toggled" Unchecked="Toggled">
                                         <StackPanel Orientation="Horizontal">
-                                            <c:AvatarView Width="28" Height="28" Radius="4" RingThickness="1.5" Initials="{Binding Contact.Initials}" Ring="{Binding Contact.Status, Converter={StaticResource StatusToBrush}}" Margin="0,0,10,0"/>
+                                            <c:AvatarView Width="28" Height="28" Radius="4" RingThickness="1.5" Source="{Binding Contact.Picture}" BuddyColor="{Binding Contact.BuddyColor}" Ring="{Binding Contact.Status, Converter={StaticResource StatusToBrush}}" Margin="0,0,10,0"/>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Contact.Title}"/>
                                                 <TextBlock Text="{Binding Contact.StatusLabel}" FontSize="11.5" Foreground="{DynamicResource Text.Tertiary}"/>

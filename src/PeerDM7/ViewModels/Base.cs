@@ -24,13 +24,19 @@ public abstract class ObservableObject : INotifyPropertyChanged
 
 public sealed class RelayCommand(Action run, Func<object?, bool>? can = null) : ICommand
 {
+    EventHandler? _changed;
+
     public event EventHandler? CanExecuteChanged
     {
-        add => CommandManager.RequerySuggested += value;
-        remove => CommandManager.RequerySuggested -= value;
+        add { _changed += value; CommandManager.RequerySuggested += value; }
+        remove { _changed -= value; CommandManager.RequerySuggested -= value; }
     }
+
     public bool CanExecute(object? p) => can?.Invoke(p) ?? true;
     public void Execute(object? p) => run();
+
+    /// <summary>Re-evaluate now instead of waiting for WPF's next input-driven requery.</summary>
+    public void Refresh() => _changed?.Invoke(this, EventArgs.Empty);
 }
 
 public static class Images
@@ -69,8 +75,23 @@ public sealed class ContactViewModel : ListItem
     public string Name
     {
         get => _name;
-        set { if (Set(ref _name, value)) { Raise(nameof(Title)); Raise(nameof(Initials)); } }
+        set { if (Set(ref _name, value)) { Raise(nameof(Title)); Raise(nameof(Initials)); Raise(nameof(BuddyColor)); } }
     }
+
+    System.Windows.Media.ImageSource? _picture;
+    /// <summary>Their display picture, or null for the default aero guy.</summary>
+    public System.Windows.Media.ImageSource? Picture { get => _picture; private set => Set(ref _picture, value); }
+    string? _pictureKey;
+
+    public void SetPicture(byte[]? data)
+    {
+        var key = data is null ? null : Convert.ToBase64String(System.Security.Cryptography.SHA256.HashData(data));
+        if (key == _pictureKey) return;
+        _pictureKey = key;
+        Picture = Controls.BuddyView.ToImage(data);
+    }
+
+    public System.Windows.Media.Color BuddyColor => Controls.BuddyView.DefaultFor(Name);
 
     string _psm = "";
     public string PersonalMessage

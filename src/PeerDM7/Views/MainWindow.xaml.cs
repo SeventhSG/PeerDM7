@@ -1,5 +1,6 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using PeerDM7.Core;
 using PeerDM7.ViewModels;
@@ -12,6 +13,8 @@ public partial class MainWindow : ChromeWindow
 
     /// <summary>Raised when the user closes the list. The app decides whether that hides or quits.</summary>
     public event Action? CloseRequested;
+
+    static App TheApp => (App)Application.Current;
 
     public MainWindow(MainViewModel vm)
     {
@@ -28,12 +31,69 @@ public partial class MainWindow : ChromeWindow
     void Close_Click(object sender, RoutedEventArgs e) => CloseRequested?.Invoke();
     void Min_Click(object sender, RoutedEventArgs e) => Minimize();
 
+    // ---- menu bar ----
+
+    static MenuItem Item(string header, Action run, bool? check = null)
+    {
+        var m = new MenuItem { Header = header };
+        if (check is { } c) m.IsChecked = c;
+        m.Click += (_, _) => run();
+        return m;
+    }
+
+    void OpenMenu(Button anchor, params object[] items)
+    {
+        var menu = new ContextMenu { PlacementTarget = anchor, Placement = PlacementMode.Bottom };
+        foreach (var i in items) menu.Items.Add(i);
+        menu.IsOpen = true;
+    }
+
+    void FileMenu_Click(object sender, RoutedEventArgs e) => OpenMenu(FileMenuButton,
+        Item("Change display picture...", ChangePicture),
+        Item("Send a file...", PickAndSendFile),
+        new Separator(),
+        Item("Close to tray", () => CloseRequested?.Invoke()),
+        Item("Sign out and quit", TheApp.Quit));
+
+    void ContactsMenu_Click(object sender, RoutedEventArgs e) => OpenMenu(ContactsMenuButton,
+        Item("Send an instant message...", () => SendMessage_Click(this, new RoutedEventArgs())),
+        Item("Start a group chat...", () => PickGroup([])),
+        Item("Add a contact by address...", ShowIpPanel));
+
+    void ToolsMenu_Click(object sender, RoutedEventArgs e) => OpenMenu(ToolsMenuButton,
+        Item("White theme", () => TheApp.SetTheme(dark: false), !TheApp.IsDark),
+        Item("Dark theme", () => TheApp.SetTheme(dark: true), TheApp.IsDark),
+        new Separator(),
+        Item("Play sounds", () => TheApp.SoundsOn = !TheApp.SoundsOn, TheApp.SoundsOn),
+        Item("Show pop-up alerts", () => TheApp.ToastsOn = !TheApp.ToastsOn, TheApp.ToastsOn));
+
+    void HelpMenu_Click(object sender, RoutedEventArgs e) => OpenMenu(HelpMenuButton,
+        Item("About PeerDM7", () => MessageBox.Show(this,
+            $"PeerDM7 {typeof(App).Assembly.GetName().Version?.ToString(3)}\n\nA serverless messenger for people on the same network. Nothing is stored: close it and your chats are gone.\n\nby SeventhSG\nhttps://github.com/SeventhSG/PeerDM7",
+            "About PeerDM7", MessageBoxButton.OK, MessageBoxImage.Information)),
+        Item("Project page", () => OpenUrl("https://github.com/SeventhSG/PeerDM7")));
+
+    static void OpenUrl(string url)
+    {
+        try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true }); } catch { }
+    }
+
+    // ---- me ----
+
+    void Picture_Click(object sender, RoutedEventArgs e) => ChangePicture();
+
+    void ChangePicture()
+    {
+        var w = new PictureWindow(_vm) { Owner = this };
+        if (w.ShowDialog() == true) _vm.SetPicture(w.Result);
+    }
+
     void Status_Click(object sender, RoutedEventArgs e)
     {
         foreach (MenuItem item in StatusMenu.Items)
             item.IsChecked = (string)item.Tag == _vm.Status.ToString();
         StatusMenu.PlacementTarget = StatusButton;
-        StatusMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+        StatusMenu.Placement = PlacementMode.Bottom;
         StatusMenu.IsOpen = true;
     }
 
@@ -47,6 +107,8 @@ public partial class MainWindow : ChromeWindow
     {
         if (e.Key is Key.Enter or Key.Escape) List.Focus();
     }
+
+    // ---- list ----
 
     void List_DoubleClick(object sender, MouseButtonEventArgs e)
     {
@@ -82,12 +144,32 @@ public partial class MainWindow : ChromeWindow
         if (Selected is GroupViewModel g) _vm.LeaveGroup(_vm.ConversationFor(g));
     }
 
+    // ---- I want to... ----
+
+    ContactViewModel? PickPerson(string heading)
+    {
+        if (Selected is ContactViewModel c) return c;
+        var picker = new PeoplePickerWindow(_vm, PickerMode.Single, []) { Owner = this };
+        picker.Heading.Text = heading;
+        return picker.ShowDialog() == true && picker.Chosen.FirstOrDefault() is { } id ? _vm.ContactFor(id) : null;
+    }
+
     void SendMessage_Click(object sender, RoutedEventArgs e)
     {
-        if (Selected is { } item) { _vm.Open(item); return; }
-        var picker = new PeoplePickerWindow(_vm, PickerMode.Single, []) { Owner = this };
-        if (picker.ShowDialog() == true && picker.Chosen.FirstOrDefault() is { } id)
-            _vm.Open(_vm.ContactFor(id));
+        if (Selected is GroupViewModel g) { _vm.Open(g); return; }
+        if (PickPerson("Send an instant message") is { } c) _vm.Open(c);
+    }
+
+    void SendFileAction_Click(object sender, RoutedEventArgs e) => PickAndSendFile();
+
+    void PickAndSendFile()
+    {
+        if (PickPerson("Send a file") is not { } c) return;
+        var dlg = new Microsoft.Win32.OpenFileDialog { Title = $"Send a file to {c.Title}" };
+        if (dlg.ShowDialog(this) != true) return;
+        var conv = _vm.ConversationFor(c);
+        _vm.Open(c);
+        _vm.SendFile(conv, dlg.FileName);
     }
 
     void NewGroup_Click(object sender, RoutedEventArgs e) => PickGroup([]);
@@ -101,8 +183,15 @@ public partial class MainWindow : ChromeWindow
 
     void AddByIp_Click(object sender, RoutedEventArgs e)
     {
-        IpPanel.Visibility = IpPanel.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
-        if (IpPanel.Visibility == Visibility.Visible) IpBox.Focus();
+        if (IpPanel.Visibility == Visibility.Visible) IpPanel.Visibility = Visibility.Collapsed;
+        else ShowIpPanel();
+    }
+
+    void ShowIpPanel()
+    {
+        IWantTo.IsExpanded = true;
+        IpPanel.Visibility = Visibility.Visible;
+        IpBox.Focus();
     }
 
     void IpBox_KeyDown(object sender, KeyEventArgs e)

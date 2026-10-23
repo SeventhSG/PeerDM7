@@ -17,7 +17,7 @@ public partial class SignInWindow : ChromeWindow
     void NameBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
     {
         var name = NameBox.Text.Trim();
-        Preview.Initials = name.Length == 0 ? "" : Images.Initials(name);
+        Preview.BuddyColor = Controls.BuddyView.DefaultFor(name);
         Go.IsEnabled = name.Length > 0;
         Error.Visibility = Visibility.Collapsed;
     }

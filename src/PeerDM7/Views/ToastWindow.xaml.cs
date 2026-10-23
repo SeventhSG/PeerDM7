@@ -18,11 +18,12 @@ public partial class ToastWindow : Window
         InitializeComponent();
         _onClick = onClick;
         Who.Text = conv.IsGroup ? conv.Title : $"{conv.Title} says:";
-        What.Text = text;
-        if (conv.IsGroup) Pic.Glyph = "";
+        Controls.EmoticonText.SetText(What, text);
+        if (conv.IsGroup) Pic.Glyph = "group";
         else
         {
-            Pic.Initials = conv.Initials;
+            Pic.Source = conv.Picture;
+            Pic.BuddyColor = conv.BuddyColor;
             Pic.Ring = Controls.StatusToBrush.For(conv.Status);
         }
 

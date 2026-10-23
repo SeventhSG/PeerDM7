@@ -5,7 +5,7 @@
         Width="300" SizeToContent="Height" WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         ResizeMode="NoResize" ShowInTaskbar="False" Topmost="True" ShowActivated="False" Focusable="False"
         FontFamily="{StaticResource Font.UI}" FontSize="13">
-    <Border x:Name="Card" Margin="10" Background="{DynamicResource Bg.Flyout}" BorderBrush="{DynamicResource Border.Default}" BorderThickness="1" CornerRadius="8"
+    <Border x:Name="Card" Margin="10" Background="{DynamicResource Bg.Window}" BorderBrush="{DynamicResource Border.Strong}" BorderThickness="1" CornerRadius="6"
             Cursor="Hand" MouseLeftButtonUp="Card_Click">
         <Border.Effect>
             <DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.22" Color="{DynamicResource Shadow.Color}"/>
@@ -19,10 +19,10 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <c:AvatarView x:Name="Pic" Width="40" Height="40" Radius="5" VerticalAlignment="Top" Margin="0,2,10,0"/>
+            <c:AvatarView x:Name="Pic" Width="48" Height="48" Radius="4" RingThickness="2" VerticalAlignment="Top" Margin="0,2,10,0"/>
             <StackPanel Grid.Column="1">
                 <TextBlock x:Name="Who" FontWeight="SemiBold" Foreground="{DynamicResource Text.Primary}" TextTrimming="CharacterEllipsis"/>
-                <TextBlock x:Name="What" Foreground="{DynamicResource Text.Secondary}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxHeight="54" Margin="0,2,0,0"/>
+                <TextBlock x:Name="What" Foreground="{DynamicResource Text.Secondary}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxHeight="54" Margin="0,2,0,0" c:EmoticonText.Size="16"/>
             </StackPanel>
             <Button Grid.Column="2" Style="{StaticResource Button.Icon}" Width="26" Height="26" FontSize="10" Content="&#xE8BB;" VerticalAlignment="Top" Click="Dismiss_Click" ToolTip="Dismiss"/>
         </Grid>

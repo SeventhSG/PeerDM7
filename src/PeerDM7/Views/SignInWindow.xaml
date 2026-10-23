@@ -21,12 +21,12 @@
             </StackPanel>
         </DockPanel>
 
-        <Border Grid.Row="1" Margin="10,0,10,0" Background="{DynamicResource Bg.Surface}" BorderBrush="{DynamicResource Border.Default}" BorderThickness="1" CornerRadius="8">
+        <Border Grid.Row="1" Margin="10,0,10,0" Style="{StaticResource Panel}">
             <Grid>
-                <Border Height="140" VerticalAlignment="Top" Background="{DynamicResource Header.Band}" CornerRadius="8,8,0,0"/>
+                <Rectangle Fill="{DynamicResource Bg.Glow}" IsHitTestVisible="False"/>
                 <StackPanel Margin="28,36,28,24">
-                    <c:AvatarView x:Name="Preview" Width="92" Height="92" Radius="10" RingThickness="3" Ring="{x:Static c:StatusToBrush.Online}" HorizontalAlignment="Center"/>
-                    <TextBlock Text="Sign in" FontFamily="{StaticResource Font.Display}" FontSize="22" FontWeight="SemiBold" Margin="0,22,0,4" HorizontalAlignment="Center"/>
+                    <c:AvatarView x:Name="Preview" Width="96" Height="96" Radius="7" Ring="{x:Static c:StatusToBrush.Online}" HorizontalAlignment="Center"/>
+                    <TextBlock FontSize="24" Margin="0,18,0,4" HorizontalAlignment="Center"><Run Text="peer" FontWeight="Bold" FontStyle="Italic" Foreground="{DynamicResource Accent.Text}"/><Run Text="DM7" FontWeight="SemiBold"/></TextBlock>
                     <TextBlock Text="Pick a name people on your network will see." Foreground="{DynamicResource Text.Secondary}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,18"/>
                     <TextBlock Text="Username" FontSize="12" Foreground="{DynamicResource Text.Secondary}" Margin="0,0,0,6"/>
                     <TextBox x:Name="NameBox" c:Hint.Text="For example, Dave" MaxLength="40" TextChanged="NameBox_TextChanged" KeyDown="NameBox_KeyDown"/>

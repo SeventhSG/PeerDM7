@@ -133,6 +133,15 @@ public sealed class PeerNetwork : IDisposable
         lock (_gate) return _peers.TryGetValue(peerId, out var p) && p.Connected;
     }
 
+    /// <summary>Reliable packets to this person still waiting for an ack. File transfers pace themselves on it.</summary>
+    public int InFlight(string peerId)
+    {
+        Peer? p;
+        lock (_gate) _peers.TryGetValue(peerId, out p);
+        if (p is null) return int.MaxValue;
+        lock (p.Lock) return p.Unacked.Count;
+    }
+
     public Task<bool> SendAsync(string peerId, JsonObject frame)
     {
         Peer? p;
@@ -510,11 +519,15 @@ public sealed class PeerNetwork : IDisposable
                 break;
 
             case "profile":
+                byte[]? pic = null;
+                if ((string?)f["pic"] is { Length: > 0 and < 60_000 } b64)
+                    try { pic = Convert.FromBase64String(b64); } catch { }
                 ProfileReceived?.Invoke(id, new PeerProfile
                 {
                     Name = Clip((string?)f["name"], 40),
                     PersonalMessage = Clip((string?)f["psm"], 120),
                     Status = StatusText.Parse((string?)f["status"]),
+                    Picture = pic,
                 });
                 break;
 
@@ -556,6 +569,7 @@ public sealed class PeerNetwork : IDisposable
             ["name"] = p.Name,
             ["psm"] = p.PersonalMessage,
             ["status"] = StatusText.Wire(p.Status),
+            ["pic"] = p.Picture is { Length: > 0 } pic ? Convert.ToBase64String(pic) : "",
         };
     }
 

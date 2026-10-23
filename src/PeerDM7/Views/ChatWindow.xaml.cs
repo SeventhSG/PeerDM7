@@ -1,7 +1,9 @@
 using System.Collections.Specialized;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
+using PeerDM7.Controls;
 using PeerDM7.ViewModels;
 
 namespace PeerDM7.Views;
@@ -20,21 +22,20 @@ public partial class ChatWindow : ChromeWindow
         InitializeComponent();
 
         var group = conv.IsGroup;
-        NudgeButton.Visibility = group ? Visibility.Collapsed : Visibility.Visible;
-        AddButton.Visibility = group ? Visibility.Visible : Visibility.Collapsed;
-        LeaveButton.Visibility = group ? Visibility.Visible : Visibility.Collapsed;
-        StatusRun.Text = group ? "" : StatusRun.Text;
-        TheirPicture.Visibility = group ? Visibility.Collapsed : Visibility.Visible;
-        MemberPanel.Visibility = group ? Visibility.Visible : Visibility.Collapsed;
-        MyPicture.Visibility = group ? Visibility.Collapsed : Visibility.Visible;
-        MyPicture.Initials = main.Initials;
-        MyPicture.Ring = Controls.StatusToBrush.For(main.Status);
-        main.PropertyChanged += Main_PropertyChanged;
+        foreach (var b in new UIElement[] { NudgeButton, FileButton, NudgeMini, FileMini, TheirPicture, MyPicture })
+            b.Visibility = group ? Visibility.Collapsed : Visibility.Visible;
+        foreach (var b in new UIElement[] { AddButton, LeaveButton, MemberPanel })
+            b.Visibility = group ? Visibility.Visible : Visibility.Collapsed;
+        if (group) StatusRun.Text = "";
+        EmoticonGrid.ItemsSource = Emoticons.All;
 
+        UpdateMe();
+        main.PropertyChanged += Main_PropertyChanged;
         conv.Messages.CollectionChanged += Messages_Changed;
         conv.Members.CollectionChanged += (_, _) => UpdateMemberCount();
         conv.NudgeArrived += OnNudge;
         conv.Closed += OnConversationClosed;
+        conv.SendFileRequested += OnSendFileRequested;
         UpdateMemberCount();
         UpdateEmpty();
 
@@ -47,15 +48,27 @@ public partial class ChatWindow : ChromeWindow
             conv.Messages.CollectionChanged -= Messages_Changed;
             conv.NudgeArrived -= OnNudge;
             conv.Closed -= OnConversationClosed;
+            conv.SendFileRequested -= OnSendFileRequested;
             main.PropertyChanged -= Main_PropertyChanged;
         };
         Loaded += (_, _) => Scroller.ScrollToEnd();
+
+        // Drop a file anywhere on the window to send it.
+        AllowDrop = !group;
+        Drop += (_, e) =>
+        {
+            if (e.Data.GetData(DataFormats.FileDrop) is string[] files)
+                foreach (var f in files.Take(5)) _main.SendFile(_conv, f);
+        };
     }
 
-    void Main_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    void Main_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) => UpdateMe();
+
+    void UpdateMe()
     {
-        MyPicture.Initials = _main.Initials;
-        MyPicture.Ring = Controls.StatusToBrush.For(_main.Status);
+        MyPicture.Source = _main.Picture;
+        MyPicture.BuddyColor = _main.BuddyColor;
+        MyPicture.Ring = StatusToBrush.For(_main.Status);
     }
 
     void UpdateMemberCount() => MemberCount.Text = $"({_conv.Members.Count + 1})";
@@ -88,6 +101,34 @@ public partial class ChatWindow : ChromeWindow
             e.Handled = true;
             Close();
         }
+    }
+
+    void Emoticons_Click(object sender, RoutedEventArgs e) => EmoticonPopup.IsOpen = !EmoticonPopup.IsOpen;
+
+    void Emoticon_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { Tag: Emoticons.Entry entry }) return;
+        EmoticonPopup.IsOpen = false;
+        var caret = Input.CaretIndex;
+        var text = Input.Text;
+        var needsSpace = caret > 0 && !char.IsWhiteSpace(text[caret - 1]);
+        var insert = (needsSpace ? " " : "") + entry.Code + " ";
+        Input.Text = text.Insert(caret, insert);
+        Input.CaretIndex = caret + insert.Length;
+        Input.Focus();
+    }
+
+    void CopyMessage_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is MenuItem { DataContext: MessageViewModel m })
+            try { Clipboard.SetText(m.Text); } catch { }
+    }
+
+    void OnSendFileRequested(ConversationViewModel conv)
+    {
+        var dlg = new Microsoft.Win32.OpenFileDialog { Title = $"Send a file to {conv.Title}", Multiselect = true };
+        if (dlg.ShowDialog(this) != true) return;
+        foreach (var f in dlg.FileNames.Take(5)) _main.SendFile(conv, f);
     }
 
     void AddPeople_Click(object sender, RoutedEventArgs e)

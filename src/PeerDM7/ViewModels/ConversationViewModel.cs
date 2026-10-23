@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using PeerDM7.Core;
 
 namespace PeerDM7.ViewModels;
@@ -16,6 +16,9 @@ public sealed class MessageViewModel : ObservableObject
     }
 
     public ChatMessage Model { get; }
+    public FileTransfer? Transfer { get; init; }
+    public bool IsFile => Model.Kind == MessageKind.File;
+    public bool IsText => Model.Kind == MessageKind.Text;
     public bool IsMine { get; }
     public string SenderName { get; }
     public string Text => Model.Text;
@@ -66,6 +69,9 @@ public sealed class ConversationViewModel : ObservableObject
         SendCommand = new RelayCommand(Send, _ => CanSend);
         NudgeCommand = new RelayCommand(() => _main.SendNudge(this), _ => !IsGroup);
         AddPeopleCommand = new RelayCommand(() => AddPeopleRequested?.Invoke(this), _ => IsGroup);
+        SendFileCommand = new RelayCommand(() => SendFileRequested?.Invoke(this), _ => !IsGroup);
+        _noticeTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(4) };
+        _noticeTimer.Tick += (_, _) => { _noticeTimer.Stop(); Notice = ""; };
         LeaveCommand = new RelayCommand(() => _main.LeaveGroup(this), _ => IsGroup);
 
         if (contact is not null) contact.PropertyChanged += (_, _) => RaiseHeader();
@@ -84,8 +90,22 @@ public sealed class ConversationViewModel : ObservableObject
     public RelayCommand NudgeCommand { get; }
     public RelayCommand AddPeopleCommand { get; }
     public RelayCommand LeaveCommand { get; }
+    public RelayCommand SendFileCommand { get; }
 
     public event Action<ConversationViewModel>? AddPeopleRequested;
+    public event Action<ConversationViewModel>? SendFileRequested;
+
+    readonly System.Windows.Threading.DispatcherTimer _noticeTimer;
+    string _notice = "";
+    /// <summary>A short hint above the input, like "slow down". Fades after a few seconds.</summary>
+    public string Notice { get => _notice; private set => Set(ref _notice, value); }
+
+    public void ShowNotice(string text)
+    {
+        Notice = text;
+        _noticeTimer.Stop();
+        _noticeTimer.Start();
+    }
     public event Action<ConversationViewModel>? NudgeArrived;
     public event Action<ConversationViewModel>? Closed;
 
@@ -93,6 +113,8 @@ public sealed class ConversationViewModel : ObservableObject
     public string Subtitle => IsGroup ? Group!.Subtitle : Contact!.Subtitle;
     public string StatusLabel => IsGroup ? "" : Contact!.StatusLabel;
     public string Initials => IsGroup ? "" : Contact!.Initials;
+    public System.Windows.Media.ImageSource? Picture => IsGroup ? null : Contact!.Picture;
+    public System.Windows.Media.Color BuddyColor => IsGroup ? Controls.BuddyView.Palette[1] : Contact!.BuddyColor;
     public PeerStatus Status => IsGroup ? PeerStatus.Online : Contact!.Status;
     public bool IsReachable => IsGroup ? Group!.OtherMemberIds.Any(_main.IsConnected) : Contact!.IsOnline;
     public int RecipientCount => IsGroup ? Group!.OtherMemberIds.Count() : 1;
@@ -110,6 +132,7 @@ public sealed class ConversationViewModel : ObservableObject
         set
         {
             if (!Set(ref _draft, value)) return;
+            SendCommand.Refresh();
             if (value.Length > 0 && DateTime.UtcNow - _lastTypingSent > TimeSpan.FromSeconds(3))
             {
                 _lastTypingSent = DateTime.UtcNow;
@@ -141,6 +164,11 @@ public sealed class ConversationViewModel : ObservableObject
     {
         var text = Draft.Trim();
         if (text.Length == 0) return;
+        if (!_main.TryTakeSendToken())
+        {
+            ShowNotice("Slow down a little. You can send again in a moment.");
+            return;
+        }
         if (text.Length > 4000) text = text[..4000];
         Draft = "";
         _lastTypingSent = DateTime.MinValue;
@@ -150,7 +178,7 @@ public sealed class ConversationViewModel : ObservableObject
     public void Add(MessageViewModel m)
     {
         var prev = Messages.LastOrDefault();
-        m.ShowHeader = m.IsNudge || prev is null || prev.IsNudge
+        m.ShowHeader = m.IsNudge || m.IsFile || prev is null || prev.IsNudge || prev.IsFile
                        || prev.Model.From != m.Model.From
                        || m.Model.Time - prev.Model.Time > TimeSpan.FromMinutes(5);
         Messages.Add(m);
@@ -206,6 +234,8 @@ public sealed class ConversationViewModel : ObservableObject
         Raise(nameof(StatusLabel));
         Raise(nameof(Status));
         Raise(nameof(Initials));
+        Raise(nameof(Picture));
+        Raise(nameof(BuddyColor));
         Raise(nameof(IsReachable));
         Raise(nameof(OfflineNotice));
         Raise(nameof(RecipientCount));

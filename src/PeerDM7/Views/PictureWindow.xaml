@@ -1,0 +1,59 @@
+<v:ChromeWindow x:Class="PeerDM7.Views.PictureWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:v="clr-namespace:PeerDM7.Views"
+        xmlns:c="clr-namespace:PeerDM7.Controls"
+        Title="Display picture" Width="440" Height="400" ResizeMode="NoResize" ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Rectangle Grid.RowSpan="3" Fill="{DynamicResource Bg.Glow}" IsHitTestVisible="False"/>
+        <DockPanel>
+            <Button DockPanel.Dock="Right" Style="{StaticResource Button.CaptionClose}" Content="&#xE8BB;" Click="Cancel_Click" ToolTip="Close"/>
+            <TextBlock Text="Display picture" Margin="12,0,0,0" VerticalAlignment="Center" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource Text.Heading}"/>
+        </DockPanel>
+
+        <Grid Grid.Row="1" Margin="12,4,12,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="128"/>
+            </Grid.ColumnDefinitions>
+            <Border Style="{StaticResource Panel}" Padding="12,10">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="Choose a picture that people will see next to your name." TextWrapping="Wrap" Foreground="{DynamicResource Text.Secondary}" Margin="0,0,0,10"/>
+                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,10,0,0">
+                        <Button Style="{StaticResource Button.Standard}" Content="Browse..." MinWidth="84" Click="Browse_Click"/>
+                        <Button Style="{StaticResource Button.Standard}" Content="Default" MinWidth="72" Margin="6,0,0,0" Click="Default_Click" ToolTip="Use the aero guy in your colour"/>
+                    </StackPanel>
+                    <ItemsControl x:Name="Builtins">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="4"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Style="{StaticResource Button.Subtle}" Padding="3" Margin="1" Click="Builtin_Click" Tag="{Binding}">
+                                    <c:AvatarView Width="50" Height="50" Radius="4" RingThickness="1.5" Source="{Binding Image}"/>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </DockPanel>
+            </Border>
+            <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                <c:AvatarView x:Name="Preview" Width="110" Height="110" Radius="7" Ring="{x:Static c:StatusToBrush.Online}" HorizontalAlignment="Center"/>
+                <TextBlock x:Name="PreviewName" HorizontalAlignment="Center" Margin="0,8,0,0" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+            </StackPanel>
+        </Grid>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="12">
+            <Button Style="{StaticResource Button.Standard}" Content="Cancel" Click="Cancel_Click" MinWidth="84" Margin="0,0,8,0" IsCancel="True"/>
+            <Button Style="{StaticResource Button.Accent}" Content="OK" MinWidth="84" Click="Ok_Click" IsDefault="True" AutomationProperties.Name="Confirm"/>
+        </StackPanel>
+    </Grid>
+</v:ChromeWindow>

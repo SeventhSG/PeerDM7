@@ -12,6 +12,7 @@ public enum MessageKind
 {
     Text,
     Nudge,
+    File,
 }
 
 public sealed class ChatMessage
@@ -55,6 +56,8 @@ public sealed class PeerProfile
     public string Name { get; set; } = "";
     public string PersonalMessage { get; set; } = "";
     public PeerStatus Status { get; set; } = PeerStatus.Online;
+    /// <summary>Display picture as a small JPEG, or null for the default aero guy.</summary>
+    public byte[]? Picture { get; set; }
 }
 
 public static class StatusText
