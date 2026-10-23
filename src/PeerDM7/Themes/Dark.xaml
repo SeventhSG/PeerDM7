@@ -100,4 +100,5 @@
     <SolidColorBrush x:Key="Danger.Text" Color="#F2827A"/>
     <SolidColorBrush x:Key="Progress.Track" Color="#283445"/>
     <Color x:Key="Shadow.Color">#000814</Color>
+    <BitmapImage x:Key="Logo" UriSource="pack://application:,,,/Assets/PeerDM7-dark.png"/>
 </ResourceDictionary>

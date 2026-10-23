@@ -44,6 +44,7 @@
   <ItemGroup>
     <Resource Include="Assets\PeerDM7.ico" />
     <Resource Include="Assets\PeerDM7.png" />
+    <Resource Include="Assets\PeerDM7-dark.png" />
   </ItemGroup>
 
 </Project>

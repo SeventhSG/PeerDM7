@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="src/PeerDM7/Assets/PeerDM7.png" width="96" alt="PeerDM7 icon">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/logo-dark.png">
+    <img src="docs/logo-light.png" width="128" alt="PeerDM7 logo">
+  </picture>
 </p>
 
 <h1 align="center">PeerDM7</h1>
@@ -81,6 +84,15 @@ Wired lab PCs usually do not do this. If people never show up on a Wi-Fi network
 | Files | Offered with name, size and SHA-256. After accepting, 16 KB chunks flow over the same encrypted channel, paced so only a few hundred KB are in flight. The receiver checks the hash before the file appears. |
 
 Identity keys are created fresh each time you sign in. That is what makes chats disappear for real: after a restart you are a new person to everyone else.
+
+## Logo
+
+The logo is drawn by the app's own aero guy code, in a white glass bubble for the white theme and a deep blue one for dark.
+Regenerate the icon and both variants with:
+
+```powershell
+dotnet run --project tools/LogoGen
+```
 
 ## Building from source
 

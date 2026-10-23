@@ -16,7 +16,7 @@
             <Button DockPanel.Dock="Right" Style="{StaticResource Button.CaptionClose}" Content="&#xE8BB;" Click="Close_Click" ToolTip="Close"/>
             <Button DockPanel.Dock="Right" Style="{StaticResource Button.Caption}" Content="&#xE921;" Click="Min_Click" ToolTip="Minimize"/>
             <StackPanel Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
-                <Image Source="/Assets/PeerDM7.png" Width="16" Height="16" Margin="0,0,8,0"/>
+                <Image Source="{DynamicResource Logo}" Width="18" Height="18" RenderOptions.BitmapScalingMode="HighQuality" Margin="0,0,8,0"/>
                 <TextBlock Text="PeerDM7" FontSize="12" Foreground="{DynamicResource Text.Secondary}"/>
             </StackPanel>
         </DockPanel>

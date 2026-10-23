@@ -19,7 +19,7 @@
             <Button DockPanel.Dock="Right" Style="{StaticResource Button.Caption}" Content="&#xE922;" Click="Max_Click" ToolTip="Maximize"/>
             <Button DockPanel.Dock="Right" Style="{StaticResource Button.Caption}" Content="&#xE921;" Click="Min_Click" ToolTip="Minimize"/>
             <StackPanel Orientation="Horizontal" Margin="10,0,0,0" VerticalAlignment="Center">
-                <Image Source="/Assets/PeerDM7.png" Width="16" Height="16" Margin="0,0,7,0"/>
+                <Image Source="{DynamicResource Logo}" Width="18" Height="18" RenderOptions.BitmapScalingMode="HighQuality" Margin="0,0,7,0"/>
                 <TextBlock FontSize="12" Foreground="{DynamicResource Text.Secondary}" TextTrimming="CharacterEllipsis">
                     <Run Text="{Binding Title, Mode=OneWay}" FontWeight="SemiBold" Foreground="{DynamicResource Text.Heading}"/><Run Text=" - Conversation"/>
                 </TextBlock>

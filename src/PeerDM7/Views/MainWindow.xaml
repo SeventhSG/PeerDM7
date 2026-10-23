@@ -80,7 +80,7 @@
             <Button DockPanel.Dock="Right" Style="{StaticResource Button.CaptionClose}" Content="&#xE8BB;" Click="Close_Click" ToolTip="Close to tray"/>
             <Button DockPanel.Dock="Right" Style="{StaticResource Button.Caption}" Content="&#xE921;" Click="Min_Click" ToolTip="Minimize"/>
             <StackPanel Orientation="Horizontal" Margin="10,0,0,0" VerticalAlignment="Center">
-                <Image Source="/Assets/PeerDM7.png" Width="16" Height="16" Margin="0,0,7,0"/>
+                <Image Source="{DynamicResource Logo}" Width="18" Height="18" RenderOptions.BitmapScalingMode="HighQuality" Margin="0,0,7,0"/>
                 <TextBlock Text="PeerDM7" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource Text.Heading}"/>
             </StackPanel>
         </DockPanel>
@@ -243,10 +243,7 @@
             <DockPanel>
                 <TextBlock DockPanel.Dock="Right" Text="{Binding NetworkLine}" FontSize="10.5" Foreground="{DynamicResource Text.Tertiary}" VerticalAlignment="Bottom" Margin="0,0,0,3"/>
                 <StackPanel Orientation="Horizontal">
-                    <Grid Width="26" Height="22" Margin="0,0,6,0">
-                        <c:BuddyView Width="18" Height="18" Color="#2F7FE0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                        <c:BuddyView Width="18" Height="18" Color="#3FAE2A" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
-                    </Grid>
+                    <Image Source="{DynamicResource Logo}" Width="28" Height="28" Margin="0,0,6,0" RenderOptions.BitmapScalingMode="HighQuality"/>
                     <TextBlock FontSize="18" VerticalAlignment="Center">
                         <Run Text="peer" FontWeight="Bold" FontStyle="Italic" Foreground="{DynamicResource Accent.Text}"/><Run Text="DM7" FontWeight="SemiBold" Foreground="{DynamicResource Text.Primary}"/>
                     </TextBlock>
