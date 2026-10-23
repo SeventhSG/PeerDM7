@@ -1,0 +1,39 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Frame around the panels, like the outer chrome of the old messenger windows -->
+    <SolidColorBrush x:Key="Bg.Window" Color="#EDF1F6"/>
+    <SolidColorBrush x:Key="Bg.Surface" Color="#FAFBFC"/>
+    <SolidColorBrush x:Key="Bg.Subtle" Color="#EEF2F8"/>
+    <SolidColorBrush x:Key="Bg.Pressed" Color="#E4E9F1"/>
+    <SolidColorBrush x:Key="Bg.Selected" Color="#E1EAF8"/>
+    <SolidColorBrush x:Key="Bg.Input" Color="#FDFDFE"/>
+    <SolidColorBrush x:Key="Bg.Flyout" Color="#FBFCFD"/>
+
+    <SolidColorBrush x:Key="Border.Default" Color="#D9DFE8"/>
+    <SolidColorBrush x:Key="Border.Strong" Color="#B9C2CF"/>
+
+    <SolidColorBrush x:Key="Text.Primary" Color="#1A1D23"/>
+    <SolidColorBrush x:Key="Text.Secondary" Color="#4E5562"/>
+    <SolidColorBrush x:Key="Text.Tertiary" Color="#687080"/>
+    <SolidColorBrush x:Key="Text.Disabled" Color="#A2A9B5"/>
+
+    <SolidColorBrush x:Key="Accent" Color="#2F6FDB"/>
+    <SolidColorBrush x:Key="Accent.Hover" Color="#2A63C5"/>
+    <SolidColorBrush x:Key="Accent.Pressed" Color="#2457AE"/>
+    <SolidColorBrush x:Key="Accent.Soft" Color="#E3ECFB"/>
+    <SolidColorBrush x:Key="Accent.Text" Color="#2560C4"/>
+    <SolidColorBrush x:Key="OnAccent" Color="#FBFCFE"/>
+
+    <LinearGradientBrush x:Key="Header.Band" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#DCE7FA" Offset="0"/>
+        <GradientStop Color="#FAFBFC" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="Accent.Rule" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#2F6FDB" Offset="0"/>
+        <GradientStop Color="#002F6FDB" Offset="1"/>
+    </LinearGradientBrush>
+
+    <SolidColorBrush x:Key="Caption.CloseHover" Color="#C42B1C"/>
+    <SolidColorBrush x:Key="Danger.Text" Color="#B3261E"/>
+    <Color x:Key="Shadow.Color">#1A2A44</Color>
+</ResourceDictionary>

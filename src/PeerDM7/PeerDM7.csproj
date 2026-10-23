@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>PeerDM7</RootNamespace>
+    <AssemblyName>PeerDM7</AssemblyName>
+    <ApplicationIcon>Assets\PeerDM7.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+
+    <Version>0.1.0</Version>
+    <Product>PeerDM7</Product>
+    <Company>SeventhSG</Company>
+    <Authors>SeventhSG</Authors>
+    <Copyright>Copyright (c) 2026 SeventhSG</Copyright>
+    <Description>Serverless LAN messenger</Description>
+
+    <!-- WinForms is only here for the tray icon; keep its implicit usings out of the WPF code. -->
+    <DisableImplicitNamespaceImports_WindowsForms>true</DisableImplicitNamespaceImports_WindowsForms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+  <!-- Single portable exe: no installer, no runtime prerequisite, no admin rights. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>none</DebugType>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\PeerDM7.ico" />
+    <Resource Include="Assets\PeerDM7.png" />
+  </ItemGroup>
+
+</Project>
