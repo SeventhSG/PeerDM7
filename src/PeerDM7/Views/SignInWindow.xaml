@@ -29,7 +29,7 @@
                     <TextBlock Text="Sign in" FontFamily="{StaticResource Font.Display}" FontSize="22" FontWeight="SemiBold" Margin="0,22,0,4" HorizontalAlignment="Center"/>
                     <TextBlock Text="Pick a name people on your network will see." Foreground="{DynamicResource Text.Secondary}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,18"/>
                     <TextBlock Text="Username" FontSize="12" Foreground="{DynamicResource Text.Secondary}" Margin="0,0,0,6"/>
-                    <TextBox x:Name="NameBox" c:Hint.Text="For example, Ozan" MaxLength="40" TextChanged="NameBox_TextChanged" KeyDown="NameBox_KeyDown"/>
+                    <TextBox x:Name="NameBox" c:Hint.Text="For example, Dave" MaxLength="40" TextChanged="NameBox_TextChanged" KeyDown="NameBox_KeyDown"/>
                     <TextBlock x:Name="Error" Foreground="{DynamicResource Danger.Text}" FontSize="12" Margin="0,6,0,0" Visibility="Collapsed" TextWrapping="Wrap"/>
                     <Button x:Name="Go" Style="{StaticResource Button.Accent}" Content="Sign in" Margin="0,16,0,0" HorizontalAlignment="Stretch" Click="Go_Click" IsEnabled="False"/>
                 </StackPanel>

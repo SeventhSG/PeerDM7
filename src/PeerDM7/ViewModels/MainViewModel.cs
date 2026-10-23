@@ -60,7 +60,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public void Start()
     {
-        _net.Start([]);
+        _net.Start();
         _tick.Start();
         Raise(nameof(NetworkLine));
     }
@@ -114,9 +114,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     {
         get
         {
-            var ip = Discovery.PrimaryAddress();
+            var ip = NetInfo.PrimaryAddress();
             if (ip is null) return "No network connection";
-            return _net.ListeningOnDefaultPort ? $"Your address: {ip}" : $"Your address: {ip}:{_net.TcpPort}";
+            return _net.ListeningOnDefaultPort ? $"Your address: {ip}" : $"Your address: {ip}:{_net.Port}";
         }
     }
 

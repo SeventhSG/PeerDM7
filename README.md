@@ -47,23 +47,27 @@ Closing the contact list keeps you online in the system tray. Right-click the tr
 > Windows SmartScreen may warn about an unrecognised app because the exe is not code-signed.
 > Choose **More info**, then **Run anyway**.
 
-### The firewall prompt
+### No admin, no firewall setup
 
-The first time PeerDM7 starts, Windows Firewall may ask whether to allow it on the network.
+PeerDM7 is built for PCs where you cannot change anything, like school or library computers on a **Public** network.
 
-- If you can, allow it on **private networks**.
-- If you cannot (no admin rights), choose **Cancel**. PeerDM7 still works as long as the other person's PC accepts connections:
-  your copy announces itself, theirs answers, and yours dials out to them. Two PCs that both block incoming connections cannot reach each other.
+- If Windows asks "Do you want to allow public and private networks to access this app?", press **Cancel**. You do not need to allow it.
+- PeerDM7 never waits for incoming connections. Every copy sends small packets to the other PCs on its subnet, and Windows Firewall
+  treats the other side's packets as replies to that traffic. That works the same on Public and Private networks.
+
+What it cannot get around: some Wi-Fi networks stop devices from talking to each other at all (client isolation).
+Wired lab PCs usually do not do this. If people never show up on a Wi-Fi network, that is the likely reason.
 
 ## How it works
 
 | Part | Detail |
 | --- | --- |
-| Discovery | UDP broadcast on port `47007` every 5 seconds. Peers answer with a unicast reply, which Windows Firewall lets through by default. |
-| Transport | One TCP connection per pair of people, port `47007` (or a free port if that one is taken). |
-| Encryption | Each session starts with an ECDH P-256 key exchange, signed with a per-session identity key. Messages are AES-256-GCM. A person's ID is a hash of their identity key, so a name can be copied but an ID cannot. |
+| Transport | One UDP socket on port `47007` (or a free port if that one is taken). No TCP listener, so no firewall rule is needed. |
+| Discovery | Broadcast hellos, plus small probes to every address on your subnet (up to the 1022 addresses around you) every few seconds. |
+| Introductions | When two people connect, each tells the other about everyone else it can reach, so the whole room links up even where probes do not reach. |
+| Encryption | Each person signs a session key exchange (ECDH P-256) with a per-session identity key. Every packet is AES-256-GCM. A person's ID is a hash of their identity key, so a name can be copied but an ID cannot. |
+| Reliability | Sequence numbers, acknowledgements and retransmits on top of UDP. Pings every 4 seconds keep the path open. |
 | Groups | Full mesh: every message goes straight to each member. Membership changes carry a version number, and the newest version wins on every PC. |
-| Delivery | Messages to someone whose connection drops are queued and resent if they come back while you are still signed in. Group messages show "Delivered to N of M". |
 
 Identity keys are created fresh each time you sign in. That is what makes chats disappear for real: after a restart you are a new person to everyone else.
 
@@ -88,7 +92,7 @@ Handy flags while developing:
 | `--quiet` | No notification sounds |
 | `--log path.txt` | Write a diagnostic log to that file |
 
-Several copies can run on one PC for testing; each gets its own port.
+Several copies can run on one PC for testing; each gets its own port and they find each other through introductions.
 
 ## Project layout
 
@@ -101,11 +105,13 @@ src/PeerDM7/
   Themes/       light and dark tokens, control styles
 ```
 
-## Known limits in v0.1.0
+## Known limits
 
 - Messages are delivered only while both people are signed in. There is no offline storage, by design.
 - No file transfer, emoticons or chat history yet.
-- PCs on different subnets need to be added by address; broadcasts do not cross routers.
+- PCs on different subnets need to be added by address, by both people if their networks block incoming traffic.
+- Wi-Fi networks with client isolation block all device-to-device traffic. Nothing on the PC can fix that.
+- On very large networks, probes cover the 1022 addresses around you; people further away appear once someone in between connects to both.
 - Windows 10 and 11, x64.
 
 ## License

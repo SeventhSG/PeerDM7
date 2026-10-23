@@ -14,7 +14,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
 
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Product>PeerDM7</Product>
     <Company>SeventhSG</Company>
     <Authors>SeventhSG</Authors>
